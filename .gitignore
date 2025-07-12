@@ -1,0 +1,69 @@
+cat > .gitignore << 'EOL'
+#-------------------------
+# Operating Specific Junk Files
+#-------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Ignore text files and Word documents
+*.txt
+*.doc
+*.docx
+
+#-------------------------
+# Environment Files
+#-------------------------
+# .env
+# .env.backup
+# .env.development
+# .env.production
+
+#-------------------------
+# Composer
+#-------------------------
+vendor/
+composer.lock
+
+#-------------------------
+# IDE / Development Files
+#-------------------------
+.phpunit.result.cache
+.phpstorm.meta.php
+_ide_helper.php
+.vscode/
+.idea/
+nbproject/
+build/
+nbbuild/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+.nb-gradle/
+
+#-------------------------
+# Temporary Files
+#-------------------------
+writable/cache/*
+writable/logs/*
+writable/session/*
+writable/uploads/*
+writable/debugbar/*
+
+!writable/cache/index.html
+!writable/logs/index.html
+!writable/session/index.html
+!writable/uploads/index.html
+!writable/debugbar/index.html
+
+#-------------------------
+# User Guide Temp Files
+#-------------------------
+user_guide_src/build/*
+
+#-------------------------
+# Test Files
+#-------------------------
+tests/coverage*
+EOL
