@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 use App\Models\PlanningModel;
 use App\Models\ActualModel;
+use App\Models\FinishGoodModel;
+use App\Models\SemiFinishGoodModel;
 use CodeIgniter\HTTP\ResponseInterface;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -38,6 +40,325 @@ class PPICController extends BaseController
         return view('admin/ppic/index', [
             'title' => 'PPIC Dashboard'
         ]);
+    }
+    
+    /**
+     * Menampilkan halaman Finish Good
+     */
+    public function finishgood()
+    {
+        // Debug message untuk memastikan fungsi dipanggil
+        log_message('debug', 'Fungsi finishgood() dipanggil');
+        
+        $finishGoodModel = new FinishGoodModel();
+        
+        // Mengambil data finish good
+        $finishGoodData = $finishGoodModel->findAll();
+        
+        // Mengambil data unik untuk filter - pastikan tidak error jika tabel kosong
+        try {
+            $criteriaList = $finishGoodModel->select('criteria')->distinct()->findAll();
+            $partNoList = $finishGoodModel->select('part_no')->distinct()->findAll();
+            $classList = $finishGoodModel->select('class')->distinct()->findAll();
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat mengambil data filter: ' . $e->getMessage());
+            $criteriaList = [];
+            $partNoList = [];
+            $classList = [];
+        }
+        
+        // Debug menggunakan log saja
+        log_message('debug', 'Jumlah data Finish Good: ' . count($finishGoodData));
+        
+        return view('admin/ppic/finishgood', [
+            'title' => 'Finish Good',
+            'finish_good' => $finishGoodData,
+            'criteria_list' => $criteriaList,
+            'part_no_list' => $partNoList,
+            'class_list' => $classList
+        ]);
+    }
+    
+    /**
+     * Menampilkan halaman Semi Finish Good
+     */
+    public function semifinishgood()
+    {
+        // Debug message untuk memastikan fungsi dipanggil
+        log_message('debug', 'Fungsi semifinishgood() dipanggil');
+        
+        $semiFinishGoodModel = new SemiFinishGoodModel();
+        
+        // Mengambil data semi finish good
+        $semiFinishGoodData = $semiFinishGoodModel->findAll();
+        
+        // Mengambil data unik untuk filter - pastikan tidak error jika tabel kosong
+        try {
+            $criteriaList = $semiFinishGoodModel->select('criteria')->distinct()->findAll();
+            $partNoList = $semiFinishGoodModel->select('part_no')->distinct()->findAll();
+            $classList = $semiFinishGoodModel->select('class')->distinct()->findAll();
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat mengambil data filter: ' . $e->getMessage());
+            $criteriaList = [];
+            $partNoList = [];
+            $classList = [];
+        }
+        
+        return view('admin/ppic/semifinishgood', [
+            'title' => 'Semi Finish Good',
+            'semifinish_good' => $semiFinishGoodData,
+            'criteria_list' => $criteriaList,
+            'part_no_list' => $partNoList,
+            'class_list' => $classList
+        ]);
+    }
+    
+    /**
+     * Import data Finish Good dari Excel
+     */
+    public function uploadFinishGood()
+    {
+        // Validasi file Excel
+        $validationRule = [
+            'excelFile' => [
+                'label' => 'File Excel',
+                'rules' => 'uploaded[excelFile]|ext_in[excelFile,xls,xlsx]|max_size[excelFile,10240]',
+            ],
+        ];
+
+        if (!$this->validate($validationRule)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => $this->validator->getErrors()
+            ]);
+        }
+
+        $file = $this->request->getFile('excelFile');
+        
+        if (!$file->isValid()) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'File tidak valid'
+            ]);
+        }
+
+        try {
+            // Membuat log untuk debugging
+            log_message('info', 'Starting Finish Good Excel import process');
+            
+            // Baca file Excel
+            $spreadsheet = IOFactory::load($file->getTempName());
+            $sheet = $spreadsheet->getActiveSheet();
+            $highestRow = $sheet->getHighestRow();
+            $highestColumn = $sheet->getHighestColumn();
+            
+            log_message('info', 'Excel file loaded. Highest row: ' . $highestRow . ', Highest column: ' . $highestColumn);
+            
+            // Inisialisasi model
+            $finishGoodModel = new FinishGoodModel();
+            
+            // Hitung jumlah data yang berhasil diimport
+            $importedCount = 0;
+            
+            // Mulai dari baris ke-2 (baris 1 adalah header)
+            for ($row = 2; $row <= $highestRow; $row++) {
+                // Baca data dari setiap kolom
+                $criteria = $sheet->getCell('A' . $row)->getValue();
+                $period = $sheet->getCell('B' . $row)->getValue();
+                $description = $sheet->getCell('C' . $row)->getValue();
+                $partNo = $sheet->getCell('D' . $row)->getValue();
+                $class = $sheet->getCell('E' . $row)->getValue();
+                $endBal = (int)$sheet->getCell('F' . $row)->getValue();
+                
+                // Jika part_no kosong, hentikan pemrosesan karena sudah mencapai akhir data valid
+                if (empty($partNo)) {
+                    log_message('info', 'Menemukan baris dengan part_no kosong pada baris ' . $row . '. Menghentikan pemrosesan.');
+                    break; // Keluar dari loop
+                }
+                
+                // Lewati baris kosong (criteria kosong)
+                if (empty($criteria)) {
+                    continue;
+                }
+                
+                // Konversi format tanggal Excel ke format MySQL
+                if ($period) {
+                    // Jika period adalah angka Excel date
+                    if (is_numeric($period)) {
+                        $excelDate = (int)$period;
+                        $unixDate = ($excelDate - 25569) * 86400;
+                        $period = gmdate('Y-m-d', $unixDate);
+                    } else {
+                        // Jika format sudah string, coba parse sebagai tanggal
+                        try {
+                            $dateObj = new \DateTime($period);
+                            $period = $dateObj->format('Y-m-d');
+                        } catch (\Exception $e) {
+                            log_message('error', 'Error parsing date: ' . $period . ', Exception: ' . $e->getMessage());
+                            $period = null;
+                        }
+                    }
+                }
+                
+                // Persiapkan data untuk disimpan
+                $data = [
+                    'criteria' => $criteria,
+                    'period' => $period,
+                    'description' => $description,
+                    'part_no' => $partNo,
+                    'class' => $class,
+                    'end_bal' => $endBal,
+                ];
+                
+                // Debug log untuk setiap baris
+                log_message('debug', 'Processing row ' . $row . ': ' . json_encode($data));
+                
+                // Simpan data ke database
+                if ($finishGoodModel->insert($data)) {
+                    $importedCount++;
+                } else {
+                    log_message('error', 'Failed to insert row ' . $row . ': ' . json_encode($finishGoodModel->errors()));
+                }
+            }
+            
+            log_message('info', 'Import complete. ' . $importedCount . ' records imported.');
+            
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Berhasil import ' . $importedCount . ' data finish good'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Excel import error: ' . $e->getMessage() . '\n' . $e->getTraceAsString());
+            
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Import data Semi Finish Good dari Excel
+     */
+    public function uploadSemiFinishGood()
+    {
+        // Validasi file Excel
+        $validationRule = [
+            'excelFile' => [
+                'label' => 'File Excel',
+                'rules' => 'uploaded[excelFile]|ext_in[excelFile,xls,xlsx]|max_size[excelFile,10240]',
+            ],
+        ];
+
+        if (!$this->validate($validationRule)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => $this->validator->getErrors()
+            ]);
+        }
+
+        $file = $this->request->getFile('excelFile');
+        
+        if (!$file->isValid()) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'File tidak valid'
+            ]);
+        }
+
+        try {
+            // Membuat log untuk debugging
+            log_message('info', 'Starting Semi Finish Good Excel import process');
+            
+            // Baca file Excel
+            $spreadsheet = IOFactory::load($file->getTempName());
+            $sheet = $spreadsheet->getActiveSheet();
+            $highestRow = $sheet->getHighestRow();
+            $highestColumn = $sheet->getHighestColumn();
+            
+            log_message('info', 'Excel file loaded. Highest row: ' . $highestRow . ', Highest column: ' . $highestColumn);
+            
+            // Inisialisasi model
+            $semiFinishGoodModel = new SemiFinishGoodModel();
+            
+            // Hitung jumlah data yang berhasil diimport
+            $importedCount = 0;
+            
+            // Mulai dari baris ke-2 (baris 1 adalah header)
+            for ($row = 2; $row <= $highestRow; $row++) {
+                // Baca data dari setiap kolom
+                $criteria = $sheet->getCell('A' . $row)->getValue();
+                $period = $sheet->getCell('B' . $row)->getValue();
+                $description = $sheet->getCell('C' . $row)->getValue();
+                $partNo = $sheet->getCell('D' . $row)->getValue();
+                $class = $sheet->getCell('E' . $row)->getValue();
+                $beginingBal = (int)$sheet->getCell('F' . $row)->getValue();
+                
+                // Jika part_no kosong, hentikan pemrosesan karena sudah mencapai akhir data valid
+                if (empty($partNo)) {
+                    log_message('info', 'Menemukan baris dengan part_no kosong pada baris ' . $row . '. Menghentikan pemrosesan.');
+                    break; // Keluar dari loop
+                }
+                
+                // Lewati baris kosong (criteria kosong)
+                if (empty($criteria)) {
+                    continue;
+                }
+                
+                // Konversi format tanggal Excel ke format MySQL
+                if ($period) {
+                    // Jika period adalah angka Excel date
+                    if (is_numeric($period)) {
+                        $excelDate = (int)$period;
+                        $unixDate = ($excelDate - 25569) * 86400;
+                        $period = gmdate('Y-m-d', $unixDate);
+                    } else {
+                        // Jika format sudah string, coba parse sebagai tanggal
+                        try {
+                            $dateObj = new \DateTime($period);
+                            $period = $dateObj->format('Y-m-d');
+                        } catch (\Exception $e) {
+                            log_message('error', 'Error parsing date: ' . $period . ', Exception: ' . $e->getMessage());
+                            $period = null;
+                        }
+                    }
+                }
+                
+                // Persiapkan data untuk disimpan
+                $data = [
+                    'criteria' => $criteria,
+                    'period' => $period,
+                    'description' => $description,
+                    'part_no' => $partNo,
+                    'class' => $class,
+                    'begining_bal' => $beginingBal,
+                ];
+                
+                // Debug log untuk setiap baris
+                log_message('debug', 'Processing row ' . $row . ': ' . json_encode($data));
+                
+                // Simpan data ke database
+                if ($semiFinishGoodModel->insert($data)) {
+                    $importedCount++;
+                } else {
+                    log_message('error', 'Failed to insert row ' . $row . ': ' . json_encode($semiFinishGoodModel->errors()));
+                }
+            }
+            
+            log_message('info', 'Import complete. ' . $importedCount . ' records imported.');
+            
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Berhasil import ' . $importedCount . ' data semi finish good'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Excel import error: ' . $e->getMessage() . '\n' . $e->getTraceAsString());
+            
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function planning()
@@ -268,7 +589,381 @@ class PPICController extends BaseController
             ]);
         }
     }
+    
+    /**
+     * Mendapatkan detail data finish good berdasarkan ID
+     * 
+     * @param int $id ID dari data finish good
+     * @return ResponseInterface
+     */
+    public function getFinishGoodDetail($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
+        }
+        
+        if ($id === null) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'ID tidak valid']);
+        }
+        
+        $finishGoodModel = new FinishGoodModel();
+        $finishGood = $finishGoodModel->find($id);
+        
+        if (!$finishGood) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data finish good tidak ditemukan']);
+        }
+        
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data' => $finishGood
+        ]);
+    }
 
+    /**
+     * Menambahkan data finish good baru
+     * 
+     * @return ResponseInterface
+     */
+    public function addFinishGood()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
+        }
+        
+        // Validasi input
+        $rules = [
+            'criteria' => 'required',
+            'part_no' => 'required',
+            'class' => 'required',
+            'end_bal' => 'required|numeric'
+        ];
+        
+        if (!$this->validate($rules)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Validasi gagal: ' . implode(', ', $this->validator->getErrors())
+            ]);
+        }
+        
+        // Persiapkan data untuk disimpan
+        $finishGoodModel = new FinishGoodModel();
+        $data = [
+            'criteria' => $this->request->getPost('criteria'),
+            'period' => $this->request->getPost('period'),
+            'description' => $this->request->getPost('description'),
+            'part_no' => $this->request->getPost('part_no'),
+            'class' => $this->request->getPost('class'),
+            'end_bal' => $this->request->getPost('end_bal')
+        ];
+        
+        // Simpan ke database
+        try {
+            $finishGoodModel->insert($data);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data finish good berhasil ditambahkan'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat menyimpan data finish good: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan data. ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Memperbarui data finish good yang sudah ada
+     * 
+     * @param int $id ID dari data finish good
+     * @return ResponseInterface
+     */
+    public function updateFinishGood($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
+        }
+        
+        if ($id === null) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'ID tidak valid']);
+        }
+        
+        // Validasi input
+        $rules = [
+            'criteria' => 'required',
+            'part_no' => 'required',
+            'class' => 'required',
+            'end_bal' => 'required|numeric'
+        ];
+        
+        if (!$this->validate($rules)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Validasi gagal: ' . implode(', ', $this->validator->getErrors())
+            ]);
+        }
+        
+        // Cek apakah data ada
+        $finishGoodModel = new FinishGoodModel();
+        $finishGood = $finishGoodModel->find($id);
+        
+        if (!$finishGood) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data finish good tidak ditemukan']);
+        }
+        
+        // Persiapkan data untuk diupdate
+        $data = [
+            'criteria' => $this->request->getPost('criteria'),
+            'period' => $this->request->getPost('period'),
+            'description' => $this->request->getPost('description'),
+            'part_no' => $this->request->getPost('part_no'),
+            'class' => $this->request->getPost('class'),
+            'end_bal' => $this->request->getPost('end_bal')
+        ];
+        
+        // Update database
+        try {
+            $finishGoodModel->update($id, $data);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data finish good berhasil diperbarui'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat memperbarui data finish good: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal memperbarui data. ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Menghapus data finish good
+     * 
+     * @param int $id ID dari data finish good
+     * @return ResponseInterface
+     */
+    public function deleteFinishGood($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
+        }
+        
+        if ($id === null) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'ID tidak valid']);
+        }
+        
+        // Cek apakah data ada
+        $finishGoodModel = new FinishGoodModel();
+        $finishGood = $finishGoodModel->find($id);
+        
+        if (!$finishGood) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data finish good tidak ditemukan']);
+        }
+        
+        // Hapus data
+        try {
+            $finishGoodModel->delete($id);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data finish good berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat menghapus data finish good: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal menghapus data. ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Mendapatkan detail data semi finish good berdasarkan ID
+     * 
+     * @param int $id ID dari data semi finish good
+     * @return ResponseInterface
+     */
+    public function getSemiFinishGoodDetail($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
+        }
+        
+        if ($id === null) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'ID tidak valid']);
+        }
+        
+        $semiFinishGoodModel = new SemiFinishGoodModel();
+        $semiFinishGood = $semiFinishGoodModel->find($id);
+        
+        if (!$semiFinishGood) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data semi finish good tidak ditemukan']);
+        }
+        
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data' => $semiFinishGood
+        ]);
+    }
+
+    /**
+     * Menambahkan data semi finish good baru
+     * 
+     * @return ResponseInterface
+     */
+    public function addSemiFinishGood()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
+        }
+        
+        // Validasi input
+        $rules = [
+            'criteria' => 'required',
+            'part_no' => 'required',
+            'class' => 'required',
+            'begining_bal' => 'required|numeric'
+        ];
+        
+        if (!$this->validate($rules)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Validasi gagal: ' . implode(', ', $this->validator->getErrors())
+            ]);
+        }
+        
+        // Persiapkan data untuk disimpan
+        $semiFinishGoodModel = new SemiFinishGoodModel();
+        $data = [
+            'criteria' => $this->request->getPost('criteria'),
+            'period' => $this->request->getPost('period'),
+            'description' => $this->request->getPost('description'),
+            'part_no' => $this->request->getPost('part_no'),
+            'class' => $this->request->getPost('class'),
+            'begining_bal' => $this->request->getPost('begining_bal')
+        ];
+        
+        // Simpan ke database
+        try {
+            $semiFinishGoodModel->insert($data);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data semi finish good berhasil ditambahkan'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat menyimpan data semi finish good: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan data. ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Memperbarui data semi finish good yang sudah ada
+     * 
+     * @param int $id ID dari data semi finish good
+     * @return ResponseInterface
+     */
+    public function updateSemiFinishGood($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
+        }
+        
+        if ($id === null) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'ID tidak valid']);
+        }
+        
+        // Validasi input
+        $rules = [
+            'criteria' => 'required',
+            'part_no' => 'required',
+            'class' => 'required',
+            'begining_bal' => 'required|numeric'
+        ];
+        
+        if (!$this->validate($rules)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Validasi gagal: ' . implode(', ', $this->validator->getErrors())
+            ]);
+        }
+        
+        // Cek apakah data ada
+        $semiFinishGoodModel = new SemiFinishGoodModel();
+        $semiFinishGood = $semiFinishGoodModel->find($id);
+        
+        if (!$semiFinishGood) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data semi finish good tidak ditemukan']);
+        }
+        
+        // Persiapkan data untuk diupdate
+        $data = [
+            'criteria' => $this->request->getPost('criteria'),
+            'period' => $this->request->getPost('period'),
+            'description' => $this->request->getPost('description'),
+            'part_no' => $this->request->getPost('part_no'),
+            'class' => $this->request->getPost('class'),
+            'begining_bal' => $this->request->getPost('begining_bal')
+        ];
+        
+        // Update database
+        try {
+            $semiFinishGoodModel->update($id, $data);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data semi finish good berhasil diperbarui'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat memperbarui data semi finish good: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal memperbarui data. ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Menghapus data semi finish good
+     * 
+     * @param int $id ID dari data semi finish good
+     * @return ResponseInterface
+     */
+    public function deleteSemiFinishGood($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
+        }
+        
+        if ($id === null) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'ID tidak valid']);
+        }
+        
+        // Cek apakah data ada
+        $semiFinishGoodModel = new SemiFinishGoodModel();
+        $semiFinishGood = $semiFinishGoodModel->find($id);
+        
+        if (!$semiFinishGood) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data semi finish good tidak ditemukan']);
+        }
+        
+        // Hapus data
+        try {
+            $semiFinishGoodModel->delete($id);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data semi finish good berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat menghapus data semi finish good: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal menghapus data. ' . $e->getMessage()
+            ]);
+        }
+    }
+    
     public function actual()
     {
         $actualModel = new ActualModel();

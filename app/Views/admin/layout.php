@@ -17,6 +17,7 @@
     <!-- Toastr CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="/css/Dashboard/dashboard.css">
+    <link rel="stylesheet" href="/css/ppic/style.css">
     
 </head>
 <body>
@@ -63,6 +64,18 @@
                                     <a class="nav-link <?= (uri_string() == 'admin/ppic/actual') ? 'active' : '' ?>" href="/admin/ppic/actual">
                                         <i class="fas fa-clipboard-list fa-fw"></i>
                                         Actual
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= (uri_string() == 'admin/ppic/finishgood') ? 'active' : '' ?>" href="/admin/ppic/finishgood">
+                                        <i class="fas fa-box fa-fw"></i>
+                                        Finish Good
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= (uri_string() == 'admin/ppic/semifinishgood') ? 'active' : '' ?>" href="/admin/ppic/semifinishgood">
+                                        <i class="fas fa-box-open fa-fw"></i>
+                                        Semi Finish Good
                                     </a>
                                 </li>
                             </ul>
@@ -119,5 +132,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Toastr JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+<!-- Custom scripts section -->
+<?= $this->renderSection('scripts') ?>
 </body>
 </html>

@@ -1,0 +1,34 @@
+/* PPIC Module Custom Styles */
+
+/* Header Gradients */
+.bg-gradient-primary {
+    background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(180deg, #1cc88a 10%, #13855c 100%);
+}
+
+.bg-gradient-info {
+    background: linear-gradient(180deg, #36b9cc 10%, #258391 100%);
+}
+
+/* Font weights */
+.font-weight-bold {
+    font-weight: 700 !important;
+}
+
+/* Card hover animation */
+.card.shadow {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card.shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .15) !important;
+}
+
+/* Filter section transition */
+#filter-section {
+    transition: all 0.3s ease-in-out;
+}

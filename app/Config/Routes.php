@@ -38,4 +38,20 @@ $routes->group('admin/ppic', ['filter' => 'auth'], function ($routes) {
     $routes->post('add-planning', 'PPICController::addPlanning');
     $routes->post('update-planning/(:num)', 'PPICController::updatePlanning/$1');
     $routes->post('delete-planning/(:num)', 'PPICController::deletePlanning/$1');
+    
+    // Route untuk Finish Good
+    $routes->get('finishgood', 'PPICController::finishgood');
+    $routes->post('upload-finishgood', 'PPICController::uploadFinishGood');
+    $routes->get('get-finishgood-detail/(:num)', 'PPICController::getFinishGoodDetail/$1');
+    $routes->post('add-finishgood', 'PPICController::addFinishGood');
+    $routes->post('update-finishgood/(:num)', 'PPICController::updateFinishGood/$1');
+    $routes->post('delete-finishgood/(:num)', 'PPICController::deleteFinishGood/$1');
+    
+    // Route untuk Semi Finish Good
+    $routes->get('semifinishgood', 'PPICController::semifinishgood');
+    $routes->post('upload-semifinishgood', 'PPICController::uploadSemiFinishGood');
+    $routes->get('get-semifinishgood-detail/(:num)', 'PPICController::getSemiFinishGoodDetail/$1');
+    $routes->post('add-semifinishgood', 'PPICController::addSemiFinishGood');
+    $routes->post('update-semifinishgood/(:num)', 'PPICController::updateSemiFinishGood/$1');
+    $routes->post('delete-semifinishgood/(:num)', 'PPICController::deleteSemiFinishGood/$1');
 });

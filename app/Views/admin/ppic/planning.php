@@ -269,7 +269,7 @@
         
         // Toggle filter section
         $('#toggle-filters').click(function() {
-            $('#filter-section').slideToggle();
+            $('#filter-section').slideToggle(150, 'linear');
         });
         
         // Filter handling
