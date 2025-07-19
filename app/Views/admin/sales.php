@@ -84,7 +84,6 @@
                         <th>Total</th>
                     </tr>
                 </thead>
-                <!-- Ganti bagian <tbody> di app/Views/admin/sales.php -->
                 <tbody>
                     <?php if (!empty($sales_data)): ?>
                         <?php foreach ($sales_data as $row): ?>
@@ -102,7 +101,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="33" class="text-center">Tidak ada data untuk ditampilkan. Silakan import file Excel.</td>
+                            <td colspan="34" class="text-center">Tidak ada data untuk ditampilkan. Silakan import file Excel.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -171,35 +170,65 @@
             dropdownParent: $('#filter-form')
         });
         
-        // Inisialisasi DataTables
-        var salesTable = $('#sales-table').DataTable({
-            responsive: false, // Nonaktifkan responsive agar semua kolom terlihat
-            scrollX: true,     // Aktifkan scrolling horizontal
-            fixedColumns: {    // Aktifkan fixed columns
-                leftColumns: 2,  // Model No dan Class tetap terlihat saat scroll
-                rightColumns: 1  // Total tetap terlihat saat scroll
-            },
-            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
-            language: {
-                search: "Cari:",
-                lengthMenu: "Tampilkan _MENU_ data",
-                zeroRecords: "Tidak ada data yang ditemukan",
-                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                infoEmpty: "Tidak ada data yang tersedia",
-                infoFiltered: "(difilter dari _MAX_ total data)",
-                paginate: {
-                    first: "Pertama",
-                    last: "Terakhir",
-                    next: "Selanjutnya",
-                    previous: "Sebelumnya"
+        // Hitung jumlah kolom di tabel untuk digunakan di DataTables
+        var columnCount = $('#sales-table thead th').length;
+        console.log('Jumlah kolom di tabel:', columnCount);
+        
+        // Inisialisasi DataTables dengan perbaikan untuk kasus data kosong
+        try {
+            // Hapus dulu HTML no-data agar tidak bentrok dengan DataTables
+            if ($('#sales-table tbody tr td[colspan]').length) {
+                $('#sales-table tbody').html('');
+            }
+            
+            var salesTable = $('#sales-table').DataTable({
+                responsive: false, // Nonaktifkan responsive agar semua kolom terlihat
+                scrollX: true,     // Aktifkan scrolling horizontal
+                fixedColumns: {    // Aktifkan fixed columns
+                    left: 2,      // Model No dan Class tetap terlihat saat scroll
+                    right: 1      // Total tetap terlihat saat scroll
                 },
-            },
-            columnDefs: [
-                { className: "text-nowrap", targets: [0, 1] },      // ModelNo dan Class tidak wrap
-                { className: "text-start", targets: [0] },         // ModelNo rata kiri
-                { className: "text-end", targets: "_all" }         // Semua kolom lain rata kanan
-            ]
-        });
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
+                language: {
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    zeroRecords: "Tidak ada data untuk ditampilkan. Silakan import file Excel.",
+                    emptyTable: "Tidak ada data untuk ditampilkan. Silakan import file Excel.",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    infoEmpty: "Tidak ada data yang tersedia",
+                    infoFiltered: "(difilter dari _MAX_ total data)",
+                    paginate: {
+                        first: "Pertama",
+                        last: "Terakhir",
+                        next: "Selanjutnya",
+                        previous: "Sebelumnya"
+                    },
+                },
+                columnDefs: [
+                    { className: "text-nowrap", targets: [0, 1] },      // ModelNo dan Class tidak wrap
+                    { className: "text-start", targets: [0] },         // ModelNo rata kiri
+                    { className: "text-end", targets: "_all" }         // Semua kolom lain rata kanan
+                ],
+                // Override template untuk pesan kosong dengan colspan yang benar
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>><"row"<"col-sm-12"tr>><"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                // Perbaikan untuk error columns
+                drawCallback: function(settings) {
+                    // Force update colspan for empty message
+                    $('.dataTables_empty').attr('colspan', columnCount);
+                }
+            });
+            
+            // Tambahan untuk memastikan colspan selalu benar
+            // Ini akan dijalankan setiap kali tabel di-redraw, misalnya saat filter
+            salesTable.on('draw', function() {
+                $('.dataTables_empty').attr('colspan', columnCount);
+            });
+            
+            console.log('DataTables berhasil diinisialisasi');
+        } catch (e) {
+            console.error('Error saat inisialisasi DataTables:', e);
+            alert('Terjadi error saat memuat tabel. Silakan refresh halaman.');
+        }
         
         // Toggle filter section
         $('#toggle-filters').click(function() {

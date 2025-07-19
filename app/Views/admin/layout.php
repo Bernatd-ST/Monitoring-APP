@@ -12,6 +12,8 @@
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <!-- DateRangePicker CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <link rel="stylesheet" href="/css/Dashboard/dashboard.css">
     
 </head>
@@ -43,10 +45,26 @@
                             Sales
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link <?= (strpos(uri_string(), 'admin/ppic') === 0) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#ppicSubmenu" role="button" aria-expanded="<?= (strpos(uri_string(), 'admin/ppic') === 0) ? 'true' : 'false' ?>" aria-controls="ppicSubmenu">
                             <i class="fas fa-industry fa-fw"></i>
-                            PPIC
+                            PPIC <i class="fas fa-chevron-down ms-1"></i>
                         </a>
+                        <div class="collapse <?= (strpos(uri_string(), 'admin/ppic') === 0) ? 'show' : '' ?>" id="ppicSubmenu">
+                            <ul class="nav flex-column ps-3">
+                                <li class="nav-item">
+                                    <a class="nav-link <?= (uri_string() == 'admin/ppic/planning') ? 'active' : '' ?>" href="/admin/ppic/planning">
+                                        <i class="fas fa-calendar-alt fa-fw"></i>
+                                        Planning
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= (uri_string() == 'admin/ppic/actual') ? 'active' : '' ?>" href="/admin/ppic/actual">
+                                        <i class="fas fa-clipboard-list fa-fw"></i>
+                                        Actual
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#">
@@ -92,5 +110,8 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <!-- DataTables FixedColumns -->
 <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
+<!-- Moment.js & DateRangePicker -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 </body>
 </html>
