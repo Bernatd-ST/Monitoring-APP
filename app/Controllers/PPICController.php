@@ -42,22 +42,231 @@ class PPICController extends BaseController
 
     public function planning()
     {
+        // Ambil model Planning
         $planningModel = new PlanningModel();
         
-        // Fetch all planning data ordered by model_no ascending
-        $data = [
+        // Query data planning dengan sort berdasarkan model_no (asc)
+        $planningData = $planningModel->orderBy('model_no', 'asc')->findAll();
+        
+        // Unique values untuk dropdown filter
+        $updateValues = $planningModel->distinct()->select('update_value')->findAll();
+        $prdCodes = $planningModel->distinct()->select('prd_code')->findAll();
+        $modelNos = $planningModel->distinct()->select('model_no')->findAll();
+        $classes = $planningModel->distinct()->select('class')->findAll();
+        
+        return view('admin/ppic/planning', [
             'title' => 'Planning Production',
-            'planning_data' => $planningModel->orderBy('model_no', 'ASC')->findAll()
+            'planning_data' => $planningData,
+            'update_values' => $updateValues,
+            'prd_codes' => $prdCodes,
+            'model_nos' => $modelNos,
+            'classes' => $classes
+        ]);
+    }
+    
+    /**
+     * Mendapatkan detail data planning berdasarkan ID
+     * 
+     * @param int $id ID dari data planning
+     * @return ResponseInterface
+     */
+    public function getPlanningDetail($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
+        }
+        
+        if ($id === null) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'ID tidak valid']);
+        }
+        
+        $planningModel = new PlanningModel();
+        $planning = $planningModel->find($id);
+        
+        if (!$planning) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data planning tidak ditemukan']);
+        }
+        
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data' => $planning
+        ]);
+    }
+    
+    /**
+     * Menambahkan data planning baru
+     * 
+     * @return ResponseInterface
+     */
+    public function addPlanning()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
+        }
+        
+        // Validasi input
+        $rules = [
+            'update_value' => 'required',
+            'prd_code' => 'required',
+            'model_no' => 'required',
+            'class' => 'required',
         ];
         
-        // Fetch distinct values for filters
-        $db = db_connect();
-        $data['update_list'] = $db->table('planning_production')->select('update_value')->distinct()->orderBy('update_value', 'ASC')->get()->getResultArray();
-        $data['prdcode_list'] = $db->table('planning_production')->select('prd_code')->distinct()->orderBy('prd_code', 'ASC')->get()->getResultArray();
-        $data['model_list'] = $db->table('planning_production')->select('model_no')->distinct()->orderBy('model_no', 'ASC')->get()->getResultArray();
-        $data['class_list'] = $db->table('planning_production')->select('class')->where('class !=', '')->distinct()->orderBy('class', 'ASC')->get()->getResultArray();
+        if (!$this->validate($rules)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Validasi gagal: ' . implode(', ', $this->validator->getErrors())
+            ]);
+        }
         
-        return view('admin/ppic/planning', $data);
+        // Persiapkan data untuk disimpan
+        $planningModel = new PlanningModel();
+        $data = [
+            'update_value' => $this->request->getPost('update_value'),
+            'prd_code' => $this->request->getPost('prd_code'),
+            'model_no' => $this->request->getPost('model_no'),
+            'class' => $this->request->getPost('class')
+        ];
+        
+        // Tambahkan data untuk day_1 sampai day_31
+        $total = 0;
+        for ($day = 1; $day <= 31; $day++) {
+            $dayValue = (float)($this->request->getPost('day_' . $day) ?? 0);
+            $data['day_' . $day] = $dayValue;
+            $total += $dayValue;
+        }
+        
+        // Tambahkan total ke data
+        $data['total'] = $total;
+        
+        // Simpan ke database
+        try {
+            $planningModel->insert($data);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data planning berhasil ditambahkan'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat menyimpan data planning: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan data. ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Memperbarui data planning yang sudah ada
+     * 
+     * @param int $id ID dari data planning
+     * @return ResponseInterface
+     */
+    public function updatePlanning($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
+        }
+        
+        if ($id === null) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'ID tidak valid']);
+        }
+        
+        // Validasi input
+        $rules = [
+            'update_value' => 'required',
+            'prd_code' => 'required',
+            'model_no' => 'required',
+            'class' => 'required',
+        ];
+        
+        if (!$this->validate($rules)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Validasi gagal: ' . implode(', ', $this->validator->getErrors())
+            ]);
+        }
+        
+        // Cek apakah data ada
+        $planningModel = new PlanningModel();
+        $planning = $planningModel->find($id);
+        
+        if (!$planning) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data planning tidak ditemukan']);
+        }
+        
+        // Persiapkan data untuk diupdate
+        $data = [
+            'update_value' => $this->request->getPost('update_value'),
+            'prd_code' => $this->request->getPost('prd_code'),
+            'model_no' => $this->request->getPost('model_no'),
+            'class' => $this->request->getPost('class')
+        ];
+        
+        // Update data untuk day_1 sampai day_31
+        $total = 0;
+        for ($day = 1; $day <= 31; $day++) {
+            $dayValue = (float)($this->request->getPost('day_' . $day) ?? 0);
+            $data['day_' . $day] = $dayValue;
+            $total += $dayValue;
+        }
+        
+        // Update total ke data
+        $data['total'] = $total;
+        
+        // Update database
+        try {
+            $planningModel->update($id, $data);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data planning berhasil diperbarui'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat memperbarui data planning: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal memperbarui data. ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Menghapus data planning
+     * 
+     * @param int $id ID dari data planning
+     * @return ResponseInterface
+     */
+    public function deletePlanning($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
+        }
+        
+        if ($id === null) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'ID tidak valid']);
+        }
+        
+        // Cek apakah data ada
+        $planningModel = new PlanningModel();
+        $planning = $planningModel->find($id);
+        
+        if (!$planning) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data planning tidak ditemukan']);
+        }
+        
+        // Hapus data
+        try {
+            $planningModel->delete($id);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data planning berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat menghapus data planning: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal menghapus data. ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function actual()

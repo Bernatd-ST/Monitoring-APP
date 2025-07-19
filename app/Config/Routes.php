@@ -32,4 +32,10 @@ $routes->group('admin/ppic', ['filter' => 'auth'], function ($routes) {
     $routes->post('upload-actual', 'PPICController::uploadActual');
     $routes->get('export-planning', 'PPICController::exportPlanning');
     $routes->get('export-actual', 'PPICController::exportActual');
+    
+    // Route untuk CRUD Planning
+    $routes->get('get-planning-detail/(:num)', 'PPICController::getPlanningDetail/$1');
+    $routes->post('add-planning', 'PPICController::addPlanning');
+    $routes->post('update-planning/(:num)', 'PPICController::updatePlanning/$1');
+    $routes->post('delete-planning/(:num)', 'PPICController::deletePlanning/$1');
 });
