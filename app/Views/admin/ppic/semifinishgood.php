@@ -93,8 +93,8 @@
     <!-- Main Data Table -->
     <div class="card-body">
         <div class="table-responsive">
-            <table id="semifinishGoodTable" class="table table-striped table-bordered">
-                <thead>
+            <table id="semifinishGoodTable" class="table table-striped table-bordered table-hover">
+                <thead class="table-dark">
                     <tr>
                         <th>No</th>
                         <th>Criteria</th>

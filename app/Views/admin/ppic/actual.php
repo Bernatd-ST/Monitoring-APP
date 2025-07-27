@@ -40,6 +40,7 @@
     <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
         <h5 class="m-0 font-weight-bold">Actual Production</h5>
         <div>
+            <button id="btn-add-actual" class="btn btn-sm btn-light me-2"><i class="fas fa-plus"></i> Tambah Data</button>
             <button id="toggle-filters" class="btn btn-sm btn-light"><i class="fas fa-filter"></i> Filter</button>
         </div>
     </div>
@@ -47,28 +48,6 @@
     <!-- Filter Section (Hidden by default) -->
     <div id="filter-section" class="card-body border-bottom" style="display: none;">
         <form id="filter-form" class="row g-3">
-            <div class="col-md-3">
-                <label for="filter-update" class="form-label">Update Value</label>
-                <select class="form-select form-select-sm" id="filter-update">
-                    <option value="">Semua Update</option>
-                    <?php if(isset($update_list)): ?>
-                        <?php foreach ($update_list as $update): ?>
-                            <option value="<?= esc($update['update_value']) ?>"><?= esc($update['update_value']) ?></option>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="filter-prdcode" class="form-label">Product Code</label>
-                <select class="form-select form-select-sm" id="filter-prdcode">
-                    <option value="">Semua Product Code</option>
-                    <?php if(isset($prdcode_list)): ?>
-                        <?php foreach ($prdcode_list as $prdcode): ?>
-                            <option value="<?= esc($prdcode['prd_code']) ?>"><?= esc($prdcode['prd_code']) ?></option>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </select>
-            </div>
             <div class="col-md-3">
                 <label for="filter-model" class="form-label">Model No</label>
                 <select class="form-select form-select-sm" id="filter-model">
@@ -91,14 +70,14 @@
                     <?php endif; ?>
                 </select>
             </div>
-            <div class="col-md-2">
-                <label for="filter-date" class="form-label">Tanggal</label>
-                <select class="form-select form-select-sm" id="filter-date">
-                    <option value="">Semua tanggal</option>
-                    <?php for ($i = 1; $i <= 31; $i++): ?>
-                        <option value="<?= $i ?>"><?= $i ?></option>
-                    <?php endfor; ?>
-                </select>
+            <div class="col-md-3">
+                <label for="filter-daterange" class="form-label">Rentang Tanggal</label>
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control" id="filter-daterange" placeholder="Pilih rentang tanggal" readonly>
+                    <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                </div>
+                <input type="hidden" id="filter-date-start" value="">
+                <input type="hidden" id="filter-date-end" value="">
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <button type="button" id="apply-filter" class="btn btn-primary btn-sm me-2">Terapkan</button>
@@ -111,31 +90,47 @@
             <table id="actual-table" class="table table-striped table-bordered table-hover">
                 <thead class="table-dark">
                     <tr>
-                        <th>Update</th>
-                        <th>Prd Code</th>
-                        <th>ModelNo</th>
+                        <!-- Kolom tetap (2) -->
+                        <th class="freeze-column">Model No</th>
                         <th>Class</th>
-                        <!-- Kolom schedule -->
+                        <!-- Kolom hari (31) -->
                         <?php for ($i = 1; $i <= 31; $i++): ?>
-                            <th class="date-column"><?= $i ?></th>
+                            <th class="date-column text-center"><?= $i ?></th>
                         <?php endfor; ?>
-                        <th>Total</th>
+                        <!-- Kolom total (1) -->
+                        <th class="text-center">Total</th>
+                        <!-- Kolom aksi (1) -->
+                        <th class="freeze-column-right text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (isset($actual_data) && !empty($actual_data)): ?>
                         <?php foreach ($actual_data as $row): ?>
-                            <tr>
-                                <td><?= esc($row['update_value']) ?></td>
-                                <td><?= esc($row['prd_code']) ?></td>
-                                <td><?= esc($row['model_no']) ?></td>
+                            <tr data-id="<?= $row['id'] ?>">
+                                <!-- Kolom tetap (2) -->
+                                <td class="freeze-column"><?= esc($row['model_no']) ?></td>
                                 <td><?= esc($row['class']) ?></td>
+                                <!-- Kolom hari (31) -->
                                 <?php for ($i = 1; $i <= 31; $i++): ?>
                                     <td class="text-end"><?= esc($row['day_'.$i]) ?></td>
                                 <?php endfor; ?>
-                                <td class="text-end"><?= esc($row['total']) ?></td>
+                                <!-- Kolom total (1) -->
+                                <td class="text-end font-weight-bold"><?= esc($row['total']) ?></td>
+                                <!-- Kolom aksi (1) -->
+                                <td class="freeze-column-right text-center">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-info view-actual" data-id="<?= $row['id'] ?>"><i class="fas fa-eye"></i></button>
+                                        <button type="button" class="btn btn-sm btn-warning edit-actual" data-id="<?= $row['id'] ?>"><i class="fas fa-edit"></i></button>
+                                        <button type="button" class="btn btn-sm btn-danger delete-actual" data-id="<?= $row['id'] ?>"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
+                    <?php else: ?>
+                        <!-- Jika tidak ada data, tampilkan pesan dengan colspan yang sama dengan jumlah kolom di thead -->
+                        <tr>
+                            <td colspan="35" class="text-center">Tidak ada data untuk ditampilkan. Silakan import file Excel.</td>
+                        </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
@@ -148,22 +143,148 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="importActualModalLabel">Import Excel Actual Production</h5>
+        <h5 class="modal-title" id="importActualModalLabel">Import Data Actual Production</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form action="<?= base_url('admin/ppic/upload-actual') ?>" method="post" enctype="multipart/form-data">
+      <form id="formImportActual" enctype="multipart/form-data">
         <div class="modal-body">
           <div class="mb-3">
-            <label for="actual_file" class="form-label">File Excel Actual</label>
-            <input class="form-control" type="file" id="actual_file" name="actual_file" accept=".xlsx, .xls" required>
-            <div class="form-text">Format: Kolom B=Model No, C=Class, D-AH=Schedule harian (1-31)</div>
+            <label for="excelFile" class="form-label">Pilih File Excel (.xls, .xlsx)</label>
+            <input class="form-control" type="file" id="excelFile" name="excelFile" accept=".xls,.xlsx">
+            <div class="form-text">Format file harus sesuai dengan template Excel actual production.</div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-          <button type="submit" class="btn btn-primary">Upload dan Proses</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" id="btnImportActual" class="btn btn-primary"><i class="fa fa-upload"></i> Upload dan Proses</button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tambah/Edit Data Actual Production -->
+<div class="modal fade" id="actualModal" tabindex="-1" aria-labelledby="actualModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="actualModalLabel">Tambah Data Actual Production</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="actualForm">
+          <?= csrf_field() ?>
+          <!-- CSRF token field akan ditambahkan oleh csrf_field() -->
+          <input type="hidden" name="id" id="actual_id">
+          <div class="mb-3">
+            <label for="model_no" class="form-label">Model No</label>
+            <input type="text" class="form-control" id="model_no" name="model_no" required>
+          </div>
+          <div class="mb-3">
+            <label for="class" class="form-label">Class</label>
+            <input type="text" class="form-control" id="class" name="class" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Schedule</label>
+            <div class="row g-2">
+              <?php for ($i = 1; $i <= 31; $i++): ?>
+              <div class="col-md-2">
+                <div class="input-group input-group-sm mb-2">
+                  <span class="input-group-text"><?= $i ?></span>
+                  <input type="number" class="form-control schedule-input" id="day_<?= $i ?>" name="day_<?= $i ?>" value="0" min="0">
+                </div>
+              </div>
+              <?php endfor; ?>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="total" class="form-label">Total</label>
+            <input type="number" class="form-control" id="total" name="total" readonly>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-primary" id="saveActual">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detail Actual Production -->
+<div class="modal fade" id="actualDetailModal" tabindex="-1" aria-labelledby="actualDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-info text-white">
+                <h5 class="modal-title" id="actualDetailModalLabel">Detail Actual Production</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="actual-details">
+                    <div class="detail-row">
+                        <div class="detail-label">Model No:</div>
+                        <div class="detail-value" id="detail-model-no"></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Class:</div>
+                        <div class="detail-value" id="detail-class"></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Total:</div>
+                        <div class="detail-value" id="detail-total"></div>
+                    </div>
+                </div>
+                
+                <h6 class="mt-4 mb-3">Distribusi Actual Production Harian</h6>
+                <div class="actual-chart-container">
+                    <canvas id="actualChart"></canvas>
+                </div>
+                
+                <h6 class="mt-4 mb-2">Data Harian</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <?php for ($i = 1; $i <= 31; $i += 1): ?>
+                                <th class="text-center"><?= $i ?></th>
+                                <?php endfor; ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr id="daily-values-row">
+                                <?php for ($i = 1; $i <= 31; $i++): ?>
+                                <td class="text-center" id="detail-day-<?= $i ?>">0</td>
+                                <?php endfor; ?>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Hapus -->
+<div class="modal fade" id="deleteActualModal" tabindex="-1" aria-labelledby="deleteActualModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-gradient-danger text-white">
+        <h5 class="modal-title" id="deleteActualModalLabel">Konfirmasi Hapus</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Apakah Anda yakin ingin menghapus data actual production ini?</p>
+        <p class="mb-0"><strong>Model No: </strong><span id="delete-model-no"></span></p>
+        <p><strong>Class: </strong><span id="delete-class"></span></p>
+        <input type="hidden" id="delete_actual_id">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-danger" id="confirmDelete">Hapus</button>
+      </div>
     </div>
   </div>
 </div>
@@ -214,106 +335,6 @@
             allowClear: true,
             dropdownParent: $('#filter-form')
         });
-        
-        // Menghapus baris 'no data' statis sebelum inisialisasi DataTables jika ada
-        if($('#actual-table tbody tr').length === 1 && $('#actual-table tbody tr td').attr('colspan')) {
-            $('#actual-table tbody tr').remove();
-        }
-        
-        // Hitung jumlah kolom dari header
-        var columnCount = $('#actual-table thead th').length;
-        
-        // Inisialisasi DataTables
-        let actualTable = new DataTable('#actual-table', {
-            responsive: false,  // Nonaktifkan responsive agar semua kolom terlihat
-            scrollX: true,      // Aktifkan scrolling horizontal
-            fixedColumns: {     // Aktifkan fixed columns
-                leftColumns: 4,   // Update, Prd Code, Model No, dan Class tetap terlihat
-                rightColumns: 1   // Total tetap terlihat
-            },
-            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
-            language: {
-                search: "Cari:",
-                lengthMenu: "Tampilkan _MENU_ data",
-                zeroRecords: "Tidak ada data yang ditemukan",
-                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                infoEmpty: "Tidak ada data yang tersedia",
-                infoFiltered: "(difilter dari _MAX_ total data)",
-                paginate: {
-                    first: "Pertama",
-                    last: "Terakhir",
-                    next: "Selanjutnya",
-                    previous: "Sebelumnya"
-                },
-            },
-            columnDefs: [
-                { className: "text-nowrap", targets: [0, 1, 2, 3] },  // Update, Prd Code, ModelNo, Class tidak wrap
-                { className: "text-start", targets: [0, 1, 2, 3] },   // Update, Prd Code, ModelNo, Class rata kiri
-                { className: "text-end", targets: "_all" }            // Semua kolom lain rata kanan
-            ],
-            drawCallback: function(settings) {
-                // Pastikan colspan pada pesan "no data" sesuai dengan jumlah kolom
-                if (settings.aoData.length === 0) {
-                    $(this).find('tbody tr td.dataTables_empty').attr('colspan', columnCount);
-                }
-            }
-        });
-        
-        // Toggle filter section
-        $('#toggle-filters').click(function() {
-            $('#filter-section').slideToggle();
-        });
-        
-        // Filter handling
-        $('#apply-filter').click(function() {
-            applyCustomFilters();
-        });
-        
-        $('#reset-filter').click(function() {
-            $('#filter-update').val('').trigger('change');
-            $('#filter-prdcode').val('').trigger('change');
-            $('#filter-model').val('').trigger('change');
-            $('#filter-class').val('').trigger('change');
-            $('#filter-date').val('');
-            actualTable.search('').columns().search('').draw();
-        });
-        
-        function applyCustomFilters() {
-            var updateFilter = $('#filter-update').val();
-            var prdcodeFilter = $('#filter-prdcode').val();
-            var modelFilter = $('#filter-model').val();
-            var classFilter = $('#filter-class').val();
-            var dateFilter = $('#filter-date').val();
-            
-            // Reset semua filter
-            actualTable.search('').columns().search('').draw();
-            
-            // Terapkan filter - gunakan filter exact match
-            if (updateFilter) {
-                actualTable.column(0).search('^' + $.fn.dataTable.util.escapeRegex(updateFilter) + '$', true, false);
-            }
-            
-            if (prdcodeFilter) {
-                actualTable.column(1).search('^' + $.fn.dataTable.util.escapeRegex(prdcodeFilter) + '$', true, false);
-            }
-            
-            if (modelFilter) {
-                actualTable.column(2).search('^' + $.fn.dataTable.util.escapeRegex(modelFilter) + '$', true, false);
-            }
-            
-            if (classFilter) {
-                actualTable.column(3).search('^' + $.fn.dataTable.util.escapeRegex(classFilter) + '$', true, false);
-            }
-            
-            // Filter tanggal - ini lebih kompleks karena perlu filter kolom tertentu
-            if (dateFilter) {
-                var columnIndex = parseInt(dateFilter) + 3; // +3 karena Update, Prd Code, ModelNo, Class ada di kolom 0, 1, 2, 3
-                // Kita perlu filter baris dengan nilai kolom dateFilter > 0
-                actualTable.column(columnIndex).search('(?!^0$)', true, false);
-            }
-            
-            actualTable.draw();
-        }
     });
 </script>
 
@@ -339,17 +360,118 @@
         overflow: hidden;
     }
     
-    .dataTables_scroll {
-        overflow: auto;
+    /* Styling untuk modal detail */
+    .actual-details {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+    }
+    
+    .detail-row {
+        display: flex;
+        width: 33%;
+        margin-bottom: 10px;
+    }
+    
+    .detail-label {
+        font-weight: bold;
+        margin-right: 8px;
+    }
+    
+    .detail-value {
+        color: #0d6efd;
+    }
+    
+    .actual-chart-container {
+        height: 300px;
+        margin-bottom: 20px;
+    }
+    
+    .table-responsive {
+        position: relative;
+        overflow-x: auto;
+    }
+    
+    /* Styling untuk kolom sticky */
+    .sticky-column {
+        position: sticky;
+        background-color: #fff;
+        z-index: 1;
+    }
+    
+    .left-column {
+        left: 0;
+        box-shadow: 5px 0 5px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .right-column {
+        right: 0;
+        box-shadow: -5px 0 5px -5px rgba(0, 0, 0, 0.1);
     }
     
     /* Styling untuk kolom total */
-    #actual-table th:last-child, 
-    #actual-table td:last-child {
+    #actual-table td:nth-last-child(2), 
+    #actual-table th:nth-last-child(2) {
         font-weight: bold;
         border-left: 2px solid #dee2e6;
         background-color: #f8f9fa !important;
     }
+    
+    /* Styling untuk freeze columns */
+    .freeze-column {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        background-color: white;
+        box-shadow: 2px 0 5px -2px rgba(0,0,0,0.2);
+    }
+    
+    .table-dark .freeze-column {
+        background-color: #212529;
+        z-index: 11;
+    }
+    
+    .freeze-column-right {
+        position: sticky;
+        right: 0;
+        z-index: 10;
+        background-color: white;
+        box-shadow: -2px 0 5px -2px rgba(0,0,0,0.2);
+    }
+    
+    .table-dark .freeze-column-right {
+        background-color: #212529;
+        z-index: 11;
+    }
+    
+    /* Styling untuk tombol aksi */
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+    
+    /* Modal detail styling */
+    .detail-row {
+        display: flex;
+        margin-bottom: 0.5rem;
+    }
+    
+    .detail-label {
+        font-weight: bold;
+        width: 120px;
+    }
+    
+    .detail-value {
+        flex-grow: 1;
+    }
 </style>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="<?= base_url('js/ppic/actual.js') ?>"></script>
 <?= $this->endSection() ?>

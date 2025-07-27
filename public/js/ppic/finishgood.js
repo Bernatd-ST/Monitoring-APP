@@ -18,7 +18,7 @@ $(document).ready(function() {
     var table = $('#finishGoodTable').DataTable({
         responsive: true,
         order: [[1, 'asc']],
-        pageLength: 25,
+        pageLength: 10,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
         language: {
             url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json'

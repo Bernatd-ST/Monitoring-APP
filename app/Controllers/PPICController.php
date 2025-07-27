@@ -393,25 +393,51 @@ class PPICController extends BaseController
      */
     public function getPlanningDetail($id = null)
     {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
-        }
+        // Log untuk debugging
+        log_message('debug', 'getPlanningDetail dipanggil dengan ID: ' . $id);
+        log_message('debug', 'Request method: ' . $this->request->getMethod());
+        log_message('debug', 'Request is AJAX: ' . ($this->request->isAJAX() ? 'true' : 'false'));
+        
+        // Matikan sementara pengecekan AJAX untuk debugging
+        // if (!$this->request->isAJAX()) {
+        //     return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Direct access not allowed']);
+        // }
         
         if ($id === null) {
+            log_message('error', 'getPlanningDetail: ID tidak valid (null)');
             return $this->response->setJSON(['status' => 'error', 'message' => 'ID tidak valid']);
         }
         
-        $planningModel = new PlanningModel();
-        $planning = $planningModel->find($id);
-        
-        if (!$planning) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Data planning tidak ditemukan']);
+        try {
+            $planningModel = new PlanningModel();
+            log_message('debug', 'Mencari data planning dengan ID: ' . $id);
+            
+            // Debug: cek tabel planning dan primary key
+            log_message('debug', 'Tabel planning: ' . $planningModel->table);
+            log_message('debug', 'Primary key: ' . $planningModel->primaryKey);
+            
+            $planning = $planningModel->find($id);
+            
+            // Debug hasil query
+            log_message('debug', 'Hasil query: ' . ($planning ? 'Data ditemukan' : 'Data tidak ditemukan'));
+            
+            if (!$planning) {
+                log_message('error', 'Data planning dengan ID ' . $id . ' tidak ditemukan');
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Data planning tidak ditemukan']);
+            }
+            
+            log_message('debug', 'Data planning berhasil diambil dengan ID: ' . $id);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'data' => $planning
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat mengambil detail planning: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
         }
-        
-        return $this->response->setJSON([
-            'status' => 'success',
-            'data' => $planning
-        ]);
     }
     
     /**
@@ -964,25 +990,6 @@ class PPICController extends BaseController
         }
     }
     
-    public function actual()
-    {
-        $actualModel = new ActualModel();
-        
-        // Fetch all actual data
-        $data = [
-            'title' => 'Actual Production',
-            'actual_data' => $actualModel->findAll()
-        ];
-        
-        // Fetch distinct values for filter
-        $db = db_connect();
-        $data['update_list'] = $db->table('actual_production')->select('update_value')->distinct()->orderBy('update_value', 'ASC')->get()->getResultArray();
-        $data['prdcode_list'] = $db->table('actual_production')->select('prd_code')->distinct()->orderBy('prd_code', 'ASC')->get()->getResultArray();
-        $data['model_list'] = $db->table('actual_production')->select('model_no')->distinct()->orderBy('model_no', 'ASC')->get()->getResultArray();
-        $data['class_list'] = $db->table('actual_production')->select('class')->where('class !=', '')->distinct()->orderBy('class', 'ASC')->get()->getResultArray();
-        
-        return view('admin/ppic/actual', $data);
-    }
 
     // Metode untuk upload file planning production
     public function uploadPlanning()
@@ -1334,112 +1341,6 @@ class PPICController extends BaseController
         }
     }
 
-    public function uploadActual()
-    {
-        // Validasi file upload
-        $validationRule = [
-            'actual_file' => [
-                'label' => 'Actual Excel File',
-                'rules' => 'uploaded[actual_file]|mime_in[actual_file,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet]|max_size[actual_file,5120]',
-                'errors' => [
-                    'uploaded' => 'Silakan pilih file Excel untuk di-upload',
-                    'mime_in' => 'File harus berupa Excel (.xls atau .xlsx)',
-                    'max_size' => 'Ukuran file tidak boleh lebih dari 5MB'
-                ]
-            ],
-        ];
-
-        if (!$this->validate($validationRule)) {
-            $errors = $this->validator->getErrors();
-            return redirect()->to('/admin/ppic/actual')
-                ->with('error', implode('<br>', $errors));
-        }
-        
-        // Get uploaded file
-        $file = $this->request->getFile('actual_file');
-        if (!$file->isValid()) {
-            return redirect()->to('/admin/ppic/actual')
-                ->with('error', 'File tidak valid');
-        }
-        
-        // Process Excel file
-        try {
-            $spreadsheet = IOFactory::load($file->getTempName());
-            $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray();
-            
-            // Skip header row
-            array_shift($rows); 
-            
-            $actualModel = new ActualModel();
-            $db = db_connect();
-            $db->transStart();
-            
-            // Truncate existing actual data
-            $db->table('actual_production')->truncate();
-            
-            $successCount = 0;
-            $errorCount = 0;
-            $log = [];
-            
-            foreach ($rows as $idx => $row) {
-                // Log the row processing
-                $log[] = "Processing row: " . ($idx + 2) . ", Data: " . json_encode($row);
-                
-                // Skip empty rows
-                if (empty($row[0]) && empty($row[1]) && empty($row[2])) {
-                    $log[] = "Skipping empty row: " . ($idx + 2);
-                    continue;
-                }
-                
-                // Prepare data
-                $actualData = [
-                    'update_value' => trim($row[0] ?? ''),
-                    'prd_code' => trim($row[1] ?? ''),
-                    'model_no' => trim($row[2] ?? ''),
-                    'class' => trim($row[3] ?? '')
-                ];
-                
-                // Process day columns (day_1 to day_31)
-                $total = 0;
-                for ($i = 1; $i <= 31; $i++) {
-                    $dayValue = intval($row[$i+3] ?? 0); // +3 because days start at column index 4 (0-indexed)
-                    $actualData["day_{$i}"] = $dayValue;
-                    $total += $dayValue;
-                }
-                
-                // Add total column
-                $actualData['total'] = $total;
-                
-                // Insert data
-                try {
-                    $actualModel->insert($actualData);
-                    $successCount++;
-                } catch (\Exception $e) {
-                    $errorCount++;
-                    $log[] = "Error inserting row: " . ($idx + 2) . ", Error: " . $e->getMessage();
-                }
-            }
-            
-            $db->transComplete();
-            
-            if ($db->transStatus() === false) {
-                // Write log to file
-                log_message('error', 'Actual Excel import error: ' . implode("\n", $log));
-                return redirect()->to('/admin/ppic/actual')
-                    ->with('error', "Terjadi kesalahan saat mengimpor data Excel. {$successCount} data berhasil, {$errorCount} data gagal.");
-            }
-            
-            // Success
-            return redirect()->to('/admin/ppic/actual')
-                ->with('success', "Import Excel berhasil. {$successCount} data telah diimpor.");
-                
-        } catch (\Exception $e) {
-            log_message('error', 'Actual Excel import error: ' . $e->getMessage());
-            return redirect()->to('/admin/ppic/actual')
-                ->with('error', 'Terjadi kesalahan saat membaca file Excel: ' . $e->getMessage());
-        }
-    }
     
     // Untuk export data Planning ke Excel
     public function exportPlanning()
@@ -1493,54 +1394,508 @@ class PPICController extends BaseController
         exit;
     }
     
-    // Untuk export data Actual ke Excel
+    
+    /**
+     * Menampilkan halaman data Actual Production
+     */
+    public function actual()
+    {
+        $actualModel = new ActualModel();
+        
+        // Fetch all actual data
+        $data = [
+            'title' => 'Actual Production',
+            'actual_data' => $actualModel->findAll()
+        ];
+        
+        // Fetch distinct values for filter
+        $db = db_connect();
+        $data['model_list'] = $db->table('actual_production')->select('model_no')->distinct()->orderBy('model_no', 'ASC')->get()->getResultArray();
+        $data['class_list'] = $db->table('actual_production')->select('class')->where('class !=', '')->distinct()->orderBy('class', 'ASC')->get()->getResultArray();
+        
+        return view('admin/ppic/actual', $data);
+    }
+
+    /**
+     * Mendapatkan data actual berdasarkan ID
+     * 
+     * @param int $id ID data actual
+     * @return ResponseInterface
+     */
+    public function getActual($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['message' => 'Akses tidak diizinkan']);
+        }
+        
+        $actualModel = new ActualModel();
+        $actual = $actualModel->find($id);
+        
+        if (!$actual) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Data tidak ditemukan'
+            ]);
+        }
+        
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data' => $actual
+        ]);
+    }
+    
+    /**
+     * Menambahkan data actual production baru
+     * 
+     * @return ResponseInterface
+     */
+    public function addActual()
+    {
+        log_message('debug', 'addActual dipanggil');
+        log_message('debug', 'POST data: ' . json_encode($this->request->getPost()));
+        
+        if (!$this->request->isAJAX()) {
+            log_message('error', 'Request bukan AJAX');
+            return $this->response->setStatusCode(403)->setJSON(['message' => 'Akses tidak diizinkan']);
+        }
+        
+        $rules = [
+            'model_no' => 'required',
+            'class' => 'required'
+        ];
+        
+        if (!$this->validate($rules)) {
+            log_message('error', 'Validasi gagal: ' . json_encode($this->validator->getErrors()));
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Validasi gagal: ' . implode(', ', $this->validator->getErrors()),
+                'errors' => $this->validator->getErrors()
+            ]);
+        }
+        
+        $actualModel = new ActualModel();
+        
+        $data = [
+            'model_no' => $this->request->getPost('model_no'),
+            'class' => $this->request->getPost('class')
+        ];
+        
+        // Calculate total from day_1 to day_31
+        $total = 0;
+        for ($i = 1; $i <= 31; $i++) {
+            $dayValue = (float)($this->request->getPost('day_' . $i) ?? 0);
+            $data['day_' . $i] = $dayValue;
+            $total += $dayValue;
+        }
+        
+        $data['total'] = $total;
+        log_message('debug', 'Data yang akan ditambahkan: ' . json_encode($data));
+        
+        try {
+            $actualModel->insert($data);
+            $insertId = $actualModel->getInsertID();
+            log_message('debug', 'Insert berhasil, ID: ' . $insertId);
+            
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data Actual Production berhasil ditambahkan',
+                'id' => $insertId
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat insert actual: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan saat menambahkan data: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Memperbarui data actual production
+     * 
+     * @param int $id ID data actual
+     * @return ResponseInterface
+     */
+    public function updateActual($id = null)
+    {
+        log_message('debug', 'updateActual dipanggil, ID: ' . $id);
+        log_message('debug', 'POST data: ' . json_encode($this->request->getPost()));
+        
+        if (!$this->request->isAJAX()) {
+            log_message('error', 'Request bukan AJAX');
+            return $this->response->setStatusCode(403)->setJSON(['message' => 'Akses tidak diizinkan']);
+        }
+        
+        $actualModel = new ActualModel();
+        
+        // Check if data exists
+        $actual = $actualModel->find($id);
+        if (!$actual) {
+            log_message('error', 'Data actual dengan ID ' . $id . ' tidak ditemukan');
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Data tidak ditemukan'
+            ]);
+        }
+        
+        $rules = [
+            'model_no' => 'required',
+            'class' => 'required'
+        ];
+        
+        if (!$this->validate($rules)) {
+            log_message('error', 'Validasi gagal: ' . json_encode($this->validator->getErrors()));
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Validasi gagal: ' . implode(', ', $this->validator->getErrors()),
+                'errors' => $this->validator->getErrors()
+            ]);
+        }
+        
+        $data = [
+            'model_no' => $this->request->getPost('model_no'),
+            'class' => $this->request->getPost('class')
+        ];
+        
+        // Calculate total from day_1 to day_31
+        $total = 0;
+        for ($i = 1; $i <= 31; $i++) {
+            $dayValue = (float)($this->request->getPost('day_' . $i) ?? 0);
+            $data['day_' . $i] = $dayValue;
+            $total += $dayValue;
+        }
+        
+        $data['total'] = $total;
+        log_message('debug', 'Data yang akan diupdate: ' . json_encode($data));
+        
+        try {
+            $actualModel->update($id, $data);
+            log_message('debug', 'Update berhasil untuk ID: ' . $id);
+            
+            // Ambil data yang sudah diupdate untuk verifikasi
+            $updatedData = $actualModel->find($id);
+            log_message('debug', 'Data setelah update: ' . json_encode($updatedData));
+            
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data Actual Production berhasil diperbarui',
+                'data' => $updatedData
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat update actual: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan saat memperbarui data: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Menghapus data actual production
+     * 
+     * @param int $id ID data actual
+     * @return ResponseInterface
+     */
+    public function deleteActual($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['message' => 'Akses tidak diizinkan']);
+        }
+        
+        $actualModel = new ActualModel();
+        
+        // Check if data exists
+        $actual = $actualModel->find($id);
+        if (!$actual) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Data tidak ditemukan'
+            ]);
+        }
+        
+        $actualModel->delete($id);
+        
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Data Actual Production berhasil dihapus'
+        ]);
+    }
+    
+    /**
+     * Method lama untuk upload file Actual (diarahkan ke importActual untuk kompatibilitas)
+     * 
+     * @return ResponseInterface
+     */
+    public function uploadActual()
+    {
+        return $this->importActual();
+    }
+    
+    /**
+     * Import data Actual Production dari file Excel
+     * 
+     * @return ResponseInterface
+     */
+    public function importActual()
+    {
+        log_message('debug', 'Import Actual dipanggil');
+        log_message('debug', 'POST data: ' . json_encode($this->request->getPost()));
+        log_message('debug', 'FILES data: ' . json_encode($this->request->getFiles()));
+        
+        // Terima request baik AJAX maupun form biasa
+        $isAjax = $this->request->isAJAX();
+        log_message('debug', 'Request adalah ' . ($isAjax ? 'AJAX' : 'form biasa'));
+        
+        // Debugging semua data yang diterima
+        log_message('debug', 'POST data: ' . json_encode($_POST));
+        log_message('debug', 'FILES data: ' . json_encode($_FILES));
+        
+        // Ambil file tanpa validasi ketat
+        $file = $this->request->getFile('excelFile');
+        
+        // Cek apakah file ada
+        if (empty($_FILES) || !$file || !$file->isValid()) {
+            log_message('error', 'File tidak ditemukan atau tidak valid');
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'File Excel tidak ditemukan. Pastikan Anda memilih file terlebih dahulu.'
+            ]);
+        }
+        
+        // Ambil ekstensi file
+        $ext = strtolower($file->getExtension());
+        if ($ext != 'xls' && $ext != 'xlsx') {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'File harus berformat Excel (.xls atau .xlsx)'
+            ]);
+        }
+
+        // Ambil file path
+        $filePath = $file->getTempName();
+        
+        try {
+            try {
+                // Cara yang lebih toleran untuk membaca file Excel
+                log_message('debug', 'Mencoba load file Excel: ' . $filePath);
+                
+                // Deteksi tipe file Excel
+                $inputFileType = IOFactory::identify($filePath);
+                log_message('debug', 'Tipe file Excel terdeteksi: ' . $inputFileType);
+                
+                // Membuat reader sesuai tipe file
+                $reader = IOFactory::createReader($inputFileType);
+                $reader->setReadDataOnly(true); // Hanya membaca data, abaikan formatting
+                
+                $spreadsheet = $reader->load($filePath);
+                $sheet = $spreadsheet->getActiveSheet();
+                
+                log_message('debug', 'Berhasil membaca file Excel');
+            } catch (\Exception $e) {
+                log_message('error', 'Error saat load file Excel: ' . $e->getMessage());
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'File Excel tidak dapat dibaca. Pastikan format file sesuai dan tidak rusak.'
+                ]);
+            }
+            
+            // Ambil data dari sheet secara manual (lebih toleran terhadap format)
+            $rows = [];
+            $highestRow = $sheet->getHighestRow();
+            $highestColumn = $sheet->getHighestColumn();
+            
+            // Konversi huruf kolom ke angka (misalnya: 'AJ' -> 36)
+            $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+            log_message('debug', 'Highest Row: ' . $highestRow . ', Highest Column: ' . $highestColumn . ' (Index: ' . $highestColumnIndex . ')');
+            
+            // Baca data baris per baris (mulai dari baris 1)
+            for ($row = 1; $row <= min($highestRow, 500); $row++) {
+                $rowData = [];
+                
+                // Baca kolom per kolom dengan cara yang kompatibel dengan semua versi PhpSpreadsheet
+                for ($col = 0; $col < min($highestColumnIndex, 40); $col++) {
+                    $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col + 1);
+                    $cellCoordinate = $colLetter . $row;
+                    $cellValue = $sheet->getCell($cellCoordinate)->getValue();
+                    $rowData[] = $cellValue;
+                }
+                
+                // Tambahkan ke array rows
+                $rows[] = $rowData;
+            }
+            
+            // Buat instance dari model
+            $actualModel = new ActualModel();
+            
+            // Langsung proses tanpa menghapus data lama
+            log_message('debug', 'Memulai proses import tanpa menghapus data lama');
+            
+            // Log jumlah baris dalam file Excel
+            log_message('debug', 'Total baris dalam file Excel: ' . count($rows));
+            log_message('debug', 'Data baris pertama: ' . json_encode($rows[0] ?? []));
+            
+            // Hitung jumlah data yang berhasil diimport
+            $importedCount = 0;
+            
+            // Loop semua baris
+            foreach ($rows as $rowIndex => $row) {
+                // Skip baris kosong atau hanya berisi header
+                if ($rowIndex < 1) {
+                    continue; // Skip header row
+                }
+                
+                // Cek apakah array memiliki cukup elemen untuk model_no
+                if (!isset($row[1])) {
+                    log_message('warning', 'Baris ' . ($rowIndex + 1) . ' tidak memiliki cukup kolom, proses berhenti');
+                    break; // Hentikan proses jika tidak ada model_no
+                }
+                
+                // Cek apakah model_no kosong atau 0
+                if (empty($row[1]) || $row[1] === '0' || $row[1] === 0) { 
+                    log_message('debug', 'Menemukan baris dengan model_no kosong atau 0 pada row ' . ($rowIndex + 1) . ', proses berhenti');
+                    break; // Hentikan proses karena ini dianggap data terakhir
+                }
+                
+                // Log data baris untuk debugging
+                log_message('debug', 'Memproses baris ' . ($rowIndex + 1) . ': ' . json_encode($row));
+                
+                // Persiapkan data, pastikan tipe data sesuai
+                $data = [
+                    'model_no' => trim((string)$row[1]), // Kolom B
+                    'class' => isset($row[2]) ? trim((string)$row[2]) : '', // Kolom C
+                ];
+                
+                // Log untuk debugging
+                log_message('debug', 'Processing model_no: ' . $data['model_no'] . ', class: ' . $data['class']);
+                
+                // Ambil data actual dari kolom D (index 3) hingga kolom AH (index 33)
+                $total = 0;
+                for ($i = 1; $i <= 31; $i++) {
+                    // Default value 0 jika tidak ada data atau data bukan numeric
+                    $colIndex = $i + 2; // Kolom D = index 3 (day_1), dst.
+                    
+                    // Sanitasi dan validasi nilai
+                    if (isset($row[$colIndex]) && (is_numeric($row[$colIndex]) || is_numeric(str_replace(',', '.', $row[$colIndex])))) {
+                        // Konversi ke float, ganti koma dengan titik jika perlu
+                        $value = (float)str_replace(',', '.', $row[$colIndex]);
+                        
+                        // Tambahan validasi angka negatif
+                        $dayValue = $value < 0 ? 0 : $value;
+                    } else {
+                        $dayValue = 0;
+                    }
+                    
+                    $data['day_'.$i] = $dayValue;
+                    $total += $dayValue;
+                }
+                
+                // Set total (jumlah dari semua hari)
+                $data['total'] = $total;
+                
+                // Insert data ke database - gunakan ignore jika terjadi duplikasi
+                try {
+                    // Cek apakah data sudah ada
+                    $existingData = $actualModel->where('model_no', $data['model_no'])
+                                              ->where('class', $data['class'])
+                                              ->first();
+                    
+                    if ($existingData) {
+                        // Update data yang sudah ada
+                        $actualModel->update($existingData['id'], $data);
+                    } else {
+                        // Insert data baru
+                        $actualModel->insert($data);
+                    }
+                    
+                    $importedCount++;
+                } catch (\Exception $e) {
+                    log_message('error', 'Error saat insert/update data baris ' . ($rowIndex + 1) . ': ' . $e->getMessage());
+                    // Lanjutkan ke baris berikutnya
+                }
+            }
+            
+            // Pastikan respons selalu berhasil jika sampai titik ini
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data berhasil diimport. Total data: ' . $importedCount
+            ]);
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat import Excel: ' . $e->getMessage());
+            // Berikan respons yang lebih bersahabat tanpa detail error teknis
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal mengimport data. Pastikan format Excel sesuai dengan petunjuk.'
+            ]);
+        }
+    }
+    
+    /**
+     * Export data Actual Production ke file Excel
+     * 
+     * @return ResponseInterface
+     */
     public function exportActual()
     {
+        // Log debug untuk memastikan method dipanggil
+        log_message('debug', 'Export Actual dipanggil');
+        
         $actualModel = new ActualModel();
         $actualData = $actualModel->findAll();
         
+        // Buat spreadsheet baru
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
-        // Header row
-        $sheet->setCellValue('A1', 'Update Value');
-        $sheet->setCellValue('B1', 'Prd Code');
-        $sheet->setCellValue('C1', 'Model No');
-        $sheet->setCellValue('D1', 'Class');
+        // Tambahkan header
+        $headerRow = 1;
+        $sheet->setCellValue('A'.$headerRow, 'No.');
+        $sheet->setCellValue('B'.$headerRow, 'Model No');
+        $sheet->setCellValue('C'.$headerRow, 'Class');
+        $sheet->setCellValue('D'.$headerRow, 'Total');
         
+        // Tambahkan header untuk day_1 sampai day_31
         for ($i = 1; $i <= 31; $i++) {
-            // Convert column index to letter (5 = E, 6 = F, etc)
-            $colIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 3);
-            $sheet->setCellValue($colIndex . '1', $i);
+            // Gunakan kolom E (index 4) dan seterusnya untuk day_1 sampai day_31
+            $col = $this->numToExcelCol($i + 3); // E = index 4, F = index 5, dst.
+            $sheet->setCellValue($col.$headerRow, 'Day '.$i);
         }
         
-        $sheet->setCellValue(\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(35) . '1', 'Total');
-        
-        // Data rows
-        $row = 2;
-        foreach ($actualData as $data) {
-            $sheet->setCellValue('A' . $row, $data['update_value']);
-            $sheet->setCellValue('B' . $row, $data['prd_code']);
-            $sheet->setCellValue('C' . $row, $data['model_no']);
-            $sheet->setCellValue('D' . $row, $data['class']);
+        // Tambahkan data
+        $row = $headerRow + 1;
+        foreach ($actualData as $index => $data) {
+            $sheet->setCellValue('A'.$row, $index + 1); // Nomor urut
+            $sheet->setCellValue('B'.$row, $data['model_no']);
+            $sheet->setCellValue('C'.$row, $data['class']);
+            $sheet->setCellValue('D'.$row, $data['total']);
             
+            // Tambahkan data untuk day_1 sampai day_31
             for ($i = 1; $i <= 31; $i++) {
-                $colIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 3);
-                $sheet->setCellValue($colIndex . $row, $data['day_' . $i]);
+                $col = $this->numToExcelCol($i + 3); // E = index 4, F = index 5, dst.
+                $sheet->setCellValue($col.$row, $data['day_'.$i]);
             }
             
-            $sheet->setCellValue(\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(35) . $row, $data['total']);
             $row++;
         }
         
-        $filename = 'actual_production_' . date('Y-m-d') . '.xlsx';
+        // Auto-size column width
+        $lastColumn = $this->numToExcelCol(31 + 3); // Kolom terakhir yang digunakan
         
-        // Set headers for download
+        // Set auto-size untuk setiap kolom yang digunakan
+        for ($i = 0; $i <= 31 + 3; $i++) {
+            $columnLetter = $this->numToExcelCol($i);
+            $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
+        }
+        
+        // Set filename
+        $filename = 'actual_production_'.date('YmdHis').'.xlsx';
+        
+        // Redirect output ke browser client
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Content-Disposition: attachment;filename="'.$filename.'"');
         header('Cache-Control: max-age=0');
         
-        $writer = new Xlsx($spreadsheet);
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save('php://output');
         exit;
     }

@@ -26,18 +26,24 @@ $routes->post('admin/sales/upload', 'SalesController::upload', ['filter' => 'aut
 // PPIC routes
 $routes->group('admin/ppic', ['filter' => 'auth'], function ($routes) {
     $routes->get('/', 'PPICController::index');
+
+    // Routes untuk Planning Production
     $routes->get('planning', 'PPICController::planning');
-    $routes->get('actual', 'PPICController::actual');
     $routes->post('upload-planning', 'PPICController::uploadPlanning');
-    $routes->post('upload-actual', 'PPICController::uploadActual');
     $routes->get('export-planning', 'PPICController::exportPlanning');
-    $routes->get('export-actual', 'PPICController::exportActual');
-    
-    // Route untuk CRUD Planning
     $routes->get('get-planning-detail/(:num)', 'PPICController::getPlanningDetail/$1');
     $routes->post('add-planning', 'PPICController::addPlanning');
     $routes->post('update-planning/(:num)', 'PPICController::updatePlanning/$1');
     $routes->post('delete-planning/(:num)', 'PPICController::deletePlanning/$1');
+    
+    // Routes untuk Actual Production
+    $routes->get('actual', 'PPICController::actual');
+    $routes->post('import-actual', 'PPICController::importActual');
+    $routes->get('export-actual', 'PPICController::exportActual');
+    $routes->get('get-actual/(:num)', 'PPICController::getActual/$1');
+    $routes->post('add-actual', 'PPICController::addActual');
+    $routes->post('update-actual/(:num)', 'PPICController::updateActual/$1');
+    $routes->post('delete-actual/(:num)', 'PPICController::deleteActual/$1');
     
     // Route untuk Finish Good
     $routes->get('finishgood', 'PPICController::finishgood');

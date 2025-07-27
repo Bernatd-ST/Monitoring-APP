@@ -52,8 +52,8 @@
                 <label for="filter-update" class="form-label">Update Value</label>
                 <select class="form-select form-select-sm" id="filter-update">
                     <option value="">Semua Update</option>
-                    <?php if(isset($update_list)): ?>
-                        <?php foreach ($update_list as $update): ?>
+                    <?php if(isset($update_values)): ?>
+                        <?php foreach ($update_values as $update): ?>
                             <option value="<?= esc($update['update_value']) ?>"><?= esc($update['update_value']) ?></option>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -63,8 +63,8 @@
                 <label for="filter-prdcode" class="form-label">Product Code</label>
                 <select class="form-select form-select-sm" id="filter-prdcode">
                     <option value="">Semua Product Code</option>
-                    <?php if(isset($prdcode_list)): ?>
-                        <?php foreach ($prdcode_list as $prdcode): ?>
+                    <?php if(isset($prd_codes)): ?>
+                        <?php foreach ($prd_codes as $prdcode): ?>
                             <option value="<?= esc($prdcode['prd_code']) ?>"><?= esc($prdcode['prd_code']) ?></option>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -74,8 +74,8 @@
                 <label for="filter-model" class="form-label">Model No</label>
                 <select class="form-select form-select-sm" id="filter-model">
                     <option value="">Semua Model</option>
-                    <?php if(isset($model_list)): ?>
-                        <?php foreach ($model_list as $model): ?>
+                    <?php if(isset($model_nos)): ?>
+                        <?php foreach ($model_nos as $model): ?>
                             <option value="<?= esc($model['model_no']) ?>"><?= esc($model['model_no']) ?></option>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -85,8 +85,8 @@
                 <label for="filter-class" class="form-label">Class</label>
                 <select class="form-select form-select-sm" id="filter-class">
                     <option value="">Semua Class</option>
-                    <?php if(isset($class_list)): ?>
-                        <?php foreach ($class_list as $cls): ?>
+                    <?php if(isset($classes)): ?>
+                        <?php foreach ($classes as $cls): ?>
                             <option value="<?= esc($cls['class']) ?>"><?= esc($cls['class']) ?></option>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -331,24 +331,37 @@
             var startDate = $('#filter-date-start').val();
             var endDate = $('#filter-date-end').val();
             
+            console.log('Applying filters:', {
+                update: updateFilter,
+                prdcode: prdcodeFilter,
+                model: modelFilter,
+                class: classFilter,
+                startDate: startDate,
+                endDate: endDate
+            });
+            
             // Reset semua filter
             planningTable.search('').columns().search('').draw();
             
             // Terapkan filter - gunakan filter exact match
             if (updateFilter) {
-                planningTable.column(0).search('^' + $.fn.dataTable.util.escapeRegex(updateFilter) + '$', true, false);
+                console.log('Filtering update:', updateFilter);
+                planningTable.column(0).search(updateFilter);
             }
             
             if (prdcodeFilter) {
-                planningTable.column(1).search('^' + $.fn.dataTable.util.escapeRegex(prdcodeFilter) + '$', true, false);
+                console.log('Filtering prdcode:', prdcodeFilter);
+                planningTable.column(1).search(prdcodeFilter);
             }
             
             if (modelFilter) {
-                planningTable.column(2).search('^' + $.fn.dataTable.util.escapeRegex(modelFilter) + '$', true, false);
+                console.log('Filtering model:', modelFilter);
+                planningTable.column(2).search(modelFilter);
             }
             
             if (classFilter) {
-                planningTable.column(3).search('^' + $.fn.dataTable.util.escapeRegex(classFilter) + '$', true, false);
+                console.log('Filtering class:', classFilter);
+                planningTable.column(3).search(classFilter);
             }
             
             // Filter rentang tanggal - tampilkan baris yang memiliki nilai > 0 pada rentang kolom tanggal
