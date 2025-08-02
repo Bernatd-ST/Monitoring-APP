@@ -23,6 +23,28 @@ $routes->get('admin/dashboard', 'Dashboard::index', ['filter' => 'auth']);
 $routes->get('admin/sales', 'SalesController::index', ['filter' => 'auth']);
 $routes->post('admin/sales/upload', 'SalesController::upload', ['filter' => 'auth']);
 
+// Material Control routes
+$routes->group('admin/material', ['filter' => 'auth'], function ($routes) {
+    $routes->get('/', 'MaterialController::index');
+    
+    // BOM routes
+    $routes->get('bom', 'MaterialController::bom');
+    $routes->get('add-bom', 'MaterialController::addBom');
+    $routes->post('save-bom', 'MaterialController::saveBom');
+    $routes->get('edit-bom/(:num)', 'MaterialController::editBom/$1');
+    $routes->post('update-bom/(:num)', 'MaterialController::updateBom/$1');
+    $routes->post('delete-bom/(:num)', 'MaterialController::deleteBom/$1');
+    $routes->get('get-bom/(:num)', 'MaterialController::getBom/$1');
+    $routes->post('import-bom', 'MaterialController::importBom');
+    $routes->get('export-bom', 'MaterialController::exportBom');
+    
+    // Material Control routes
+    $routes->get('material-control', 'MaterialController::materialControl');
+    
+    // Shipment Schedule routes
+    $routes->get('shipment-schedule', 'MaterialController::shipmentSchedule');
+});
+
 // PPIC routes
 $routes->group('admin/ppic', ['filter' => 'auth'], function ($routes) {
     $routes->get('/', 'PPICController::index');

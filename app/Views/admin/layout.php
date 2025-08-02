@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= csrf_hash() ?>">
     <title><?= esc($title); ?> - Monitoring App</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -82,10 +83,32 @@
                         </div>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link <?= (strpos(uri_string(), 'admin/material') === 0) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#materialSubmenu" role="button" aria-expanded="<?= (strpos(uri_string(), 'admin/material') === 0) ? 'true' : 'false' ?>" aria-controls="materialSubmenu">
                             <i class="fas fa-box-open fa-fw"></i>
-                            Material Control
+                            Material Control <i class="fas fa-chevron-down ms-1"></i>
                         </a>
+                        <div class="collapse <?= (strpos(uri_string(), 'admin/material') === 0) ? 'show' : '' ?>" id="materialSubmenu">
+                            <ul class="nav flex-column ps-3">
+                                <li class="nav-item">
+                                    <a class="nav-link <?= (uri_string() == 'admin/material/bom') ? 'active' : '' ?>" href="/admin/material/bom">
+                                        <i class="fas fa-file-alt fa-fw"></i>
+                                        BOM
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= (uri_string() == 'admin/material/material-control') ? 'active' : '' ?>" href="/admin/material/material-control">
+                                        <i class="fas fa-boxes fa-fw"></i>
+                                        Material Control
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= (uri_string() == 'admin/material/shipment-schedule') ? 'active' : '' ?>" href="/admin/material/shipment-schedule">
+                                        <i class="fas fa-shipping-fast fa-fw"></i>
+                                        Shipment Schedule
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#">
@@ -137,6 +160,46 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Toastr JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+<!-- Toastr Notifications -->
+<script>
+$(document).ready(function() {
+    // Konfigurasi Toastr
+    toastr.options = {
+        closeButton: true,
+        newestOnTop: true,
+        progressBar: true,
+        positionClass: "toast-top-right",
+        preventDuplicates: false,
+        onclick: null,
+        showDuration: "300",
+        hideDuration: "1000",
+        timeOut: "5000",
+        extendedTimeOut: "1000",
+        showEasing: "swing",
+        hideEasing: "linear",
+        showMethod: "fadeIn",
+        hideMethod: "fadeOut"
+    };
+    
+    // Menampilkan notifikasi dari flashdata
+    <?php if (session()->getFlashdata('success')) : ?>
+        toastr.success('<?= session()->getFlashdata('success') ?>');
+    <?php endif; ?>
+    
+    <?php if (session()->getFlashdata('error')) : ?>
+        toastr.error('<?= session()->getFlashdata('error') ?>');
+    <?php endif; ?>
+    
+    <?php if (session()->getFlashdata('warning')) : ?>
+        toastr.warning('<?= session()->getFlashdata('warning') ?>');
+    <?php endif; ?>
+    
+    <?php if (session()->getFlashdata('info')) : ?>
+        toastr.info('<?= session()->getFlashdata('info') ?>');
+    <?php endif; ?>
+});
+</script>
 
 <!-- Custom scripts section -->
 <?= $this->renderSection('scripts') ?>
