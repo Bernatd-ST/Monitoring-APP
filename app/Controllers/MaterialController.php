@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\Models\MasterBomModel;
+use App\Models\StockMaterialModel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -14,10 +15,12 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 class MaterialController extends BaseController
 {
     protected $masterBomModel;
+    protected $stockMaterialModel;
     
     public function __construct()
     {
         $this->masterBomModel = new MasterBomModel();
+        $this->stockMaterialModel = new StockMaterialModel();
     }
     
     /**
@@ -586,11 +589,789 @@ class MaterialController extends BaseController
      */
     public function materialControl()
     {
+        // Ambil parameter filter dari request
+        $ckd = $this->request->getGet('ckd');
+        $part_no = $this->request->getGet('part_no');
+        $description = $this->request->getGet('description');
+        $class = $this->request->getGet('class');
+        
+        // Buat array filter
+        $filters = [];
+        if (!empty($ckd)) $filters['ckd'] = $ckd;
+        if (!empty($part_no)) $filters['part_no'] = $part_no;
+        if (!empty($description)) $filters['description'] = $description;
+        if (!empty($class)) $filters['class'] = $class;
+        
+        // Simpan filter ke session untuk digunakan kembali pada export
+        session()->set('material_filters', $filters);
+        
+        // Log parameter filter untuk debugging
+        log_message('debug', 'Material Control filter parameters: ' . json_encode($filters));
+        
+        // Ambil data menggunakan fungsi getMaterials dari model
+        $material_data = $this->stockMaterialModel->getMaterials($filters);
+        
+        // Log jumlah data yang ditemukan
+        log_message('debug', 'Material Control data found: ' . count($material_data));
+        
+        // Jika tidak ada data ditemukan, coba periksa database tanpa filter
+        if (count($material_data) === 0 && !empty($filters)) {
+            log_message('debug', 'No data found with filters, checking if any data exists in the table');
+            $all_data = $this->stockMaterialModel->findAll();
+            log_message('debug', 'Total records in table without filter: ' . count($all_data));
+        }
+        
         $data = [
-            'title' => 'Material Control'
+            'title' => 'Material Control',
+            'material_data' => $material_data,
+            // Kirim kembali parameter filter untuk mengisi form
+            'filter' => [
+                'ckd' => $ckd,
+                'part_no' => $part_no,
+                'description' => $description,
+                'class' => $class
+            ]
         ];
         
         return view('admin/material/material_control', $data);
+    }
+    
+    /**
+     * Menampilkan form tambah Material
+     */
+    public function addMaterial()
+    {
+        $data = [
+            'title' => 'Add Material Control'
+        ];
+        
+        return view('admin/material/material_form', $data);
+    }
+    
+    /**
+     * Menyimpan data Material baru
+     */
+    public function saveMaterial()
+    {
+        // Log semua data yang diterima untuk debugging
+        log_message('debug', 'saveMaterial method called with POST data: ' . json_encode($this->request->getPost()));
+        
+        // Format tanggal period jika ada
+        $period = $this->request->getPost('period');
+        if (!empty($period)) {
+            $period = $this->stockMaterialModel->formatExcelDate($period);
+        }
+        
+        $data = [
+            'ckd' => $this->request->getPost('ckd'),
+            'period' => $period,
+            'description' => $this->request->getPost('description'),
+            'part_no' => $this->request->getPost('part_no'),
+            'class' => $this->request->getPost('class'),
+            'beginning' => $this->request->getPost('beginning')
+        ];
+        
+        // Filter data untuk menghapus nilai kosong
+        $data = array_filter($data, function($value) {
+            return $value !== null && $value !== '';
+        });
+        
+        // Pastikan setidaknya ckd dan part_no tidak kosong
+        if (empty($data['ckd']) || empty($data['part_no'])) {
+            $errorMsg = 'CKD and Part No are required fields';
+            log_message('error', 'Material save failed: ' . $errorMsg);
+            return redirect()->back()->withInput()
+                ->with('error', $errorMsg);
+        }
+        
+        try {
+            // Simpan data ke database
+            if ($this->stockMaterialModel->insert($data)) {
+                log_message('info', 'Material saved successfully: ' . json_encode($data));
+                return redirect()->to('/admin/material/material-control')
+                    ->with('success', 'Material data saved successfully');
+            } else {
+                $errors = $this->stockMaterialModel->errors();
+                $errorMsg = implode(', ', $errors);
+                log_message('error', 'Material save failed: ' . $errorMsg);
+                return redirect()->back()->withInput()
+                    ->with('error', 'Failed to save material data: ' . $errorMsg);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception during Material save: ' . $e->getMessage());
+            return redirect()->back()->withInput()
+                ->with('error', 'An error occurred while saving material data: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Menampilkan form edit Material
+     */
+    public function editMaterial($id = null)
+    {
+        if ($id === null) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Material ID is required'
+                ]);
+            }
+            return redirect()->to('/admin/material/material-control')
+                ->with('error', 'Material ID is required');
+        }
+        
+        $material = $this->stockMaterialModel->find($id);
+        log_message('debug', 'editMaterial: Looking for material with ID ' . $id . ', result: ' . ($material ? 'found' : 'not found'));
+        
+        if (!$material) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Material not found'
+                ]);
+            }
+            return redirect()->to('/admin/material/material-control')
+                ->with('error', 'Material not found');
+        }
+        
+        $data = [
+            'title' => 'Edit Material Control',
+            'material' => $material
+        ];
+        
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $material
+            ]);
+        }
+        
+        return view('admin/material/edit_material', $data);
+    }
+    
+    /**
+     * Mengupdate data Material
+     */
+    public function updateMaterial($id = null)
+    {
+        if ($id === null) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Material ID is required'
+                ]);
+            }
+            return redirect()->to('/admin/material/material-control')
+                ->with('error', 'Material ID is required');
+        }
+        
+        // Cek apakah material dengan ID tersebut ada
+        $material = $this->stockMaterialModel->find($id);
+        if (!$material) {
+            log_message('error', 'Material not found for update: ID ' . $id);
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Material data not found'
+                ]);
+            }
+            return redirect()->to('/admin/material/material-control')
+                ->with('error', 'Material data not found');
+        }
+        
+        // Log semua data yang diterima untuk debugging
+        log_message('debug', 'updateMaterial method called with POST data: ' . json_encode($this->request->getPost()));
+        
+        // Format tanggal period jika ada
+        $period = $this->request->getPost('period');
+        if (!empty($period)) {
+            $period = $this->stockMaterialModel->formatExcelDate($period);
+        }
+        
+        $data = [
+            'ckd' => $this->request->getPost('ckd'),
+            'period' => $period,
+            'description' => $this->request->getPost('description'),
+            'part_no' => $this->request->getPost('part_no'),
+            'class' => $this->request->getPost('class'),
+            'beginning' => $this->request->getPost('beginning')
+        ];
+        
+        // Filter data untuk menghapus nilai kosong
+        $data = array_filter($data, function($value) {
+            return $value !== null && $value !== '';
+        });
+        
+        // Pastikan setidaknya ckd dan part_no tidak kosong
+        if (empty($data['ckd']) || empty($data['part_no'])) {
+            $errorMsg = 'CKD and Part No are required fields';
+            log_message('error', 'Material update failed: ' . $errorMsg);
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => $errorMsg
+                ]);
+            }
+            return redirect()->back()->withInput()
+                ->with('error', $errorMsg);
+        }
+        
+        try {
+            // Update data di database
+            if ($this->stockMaterialModel->update($id, $data)) {
+                log_message('info', 'Material updated successfully: ' . json_encode($data));
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'success' => true,
+                        'message' => 'Material data updated successfully',
+                        'data' => $this->stockMaterialModel->find($id)
+                    ]);
+                }
+                return redirect()->to('/admin/material/material-control')
+                    ->with('success', 'Material data updated successfully');
+            } else {
+                $errors = $this->stockMaterialModel->errors();
+                $errorMsg = implode(', ', $errors);
+                log_message('error', 'Material update failed: ' . $errorMsg);
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Failed to update material data: ' . $errorMsg
+                    ]);
+                }
+                return redirect()->back()->withInput()
+                    ->with('error', 'Failed to update material data: ' . $errorMsg);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception during Material update: ' . $e->getMessage());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'An error occurred while updating material data'
+                ]);
+            }
+            return redirect()->back()->withInput()
+                ->with('error', 'An error occurred while updating material data: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Menghapus data Material
+     */
+    public function deleteMaterial($id = null)
+    {
+        if ($id === null) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Material ID is required'
+                ]);
+            }
+            return redirect()->to('/admin/material/material-control')
+                ->with('error', 'Material ID is required');
+        }
+        
+        try {
+            // Cek apakah material dengan ID tersebut ada
+            $material = $this->stockMaterialModel->find($id);
+            if (!$material) {
+                log_message('error', 'Material not found for delete: ID ' . $id);
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Material data not found'
+                    ]);
+                }
+                return redirect()->to('/admin/material/material-control')
+                    ->with('error', 'Material data not found');
+            }
+            
+            if ($this->stockMaterialModel->delete($id)) {
+                log_message('info', 'Material deleted successfully: ID ' . $id);
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'success' => true,
+                        'message' => 'Material data deleted successfully'
+                    ]);
+                }
+                return redirect()->to('/admin/material/material-control')
+                    ->with('success', 'Material data deleted successfully');
+            } else {
+                log_message('error', 'Material delete failed: ID ' . $id);
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Failed to delete material data'
+                    ]);
+                }
+                return redirect()->to('/admin/material/material-control')
+                    ->with('error', 'Failed to delete material data');
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception during Material delete: ' . $e->getMessage());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'An error occurred while deleting material data'
+                ]);
+            }
+            return redirect()->to('/admin/material/material-control')
+                ->with('error', 'An error occurred while deleting material data: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Mendapatkan data Material berdasarkan ID (untuk AJAX)
+     */
+    public function getMaterial($id = null)
+    {
+        if ($id === null) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Material ID is required'
+            ]);
+        }
+        
+        $material = $this->stockMaterialModel->find($id);
+        
+        if (!$material) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Material not found'
+            ]);
+        }
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $material
+        ]);
+    }
+    
+    /**
+     * Import data Material dari file Excel
+     */
+    public function importMaterial()
+    {
+        // Untuk AJAX request
+        if ($this->request->isAJAX()) {
+            $file = $this->request->getFile('excel_file');
+            
+            if (!$file || !$file->isValid()) {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Invalid file upload'
+                ]);
+            }
+            
+            try {
+                // Memulai transaksi database
+                $db = \Config\Database::connect();
+                $db->transBegin();
+                
+                // Baca file Excel
+                $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+                // Mengatur setReadDataOnly(true) untuk membaca nilai hasil rumus, bukan rumusnya
+                $reader->setReadDataOnly(true);
+                $spreadsheet = $reader->load($file->getTempName());
+                $sheet = $spreadsheet->getActiveSheet();
+                $highestRow = $sheet->getHighestRow();
+                
+                // Debug log untuk nama worksheet dan jumlah baris
+                log_message('debug', 'Worksheet name: ' . $sheet->getTitle() . ', Highest row: ' . $highestRow);
+                
+                $successCount = 0;
+                $errorCount = 0;
+                
+                for ($row = 2; $row <= $highestRow; $row++) {
+                    $ckd = $sheet->getCell('A' . $row)->getValue(); // Column A
+                    
+                    // Skip empty rows
+                    if (empty($ckd)) {
+                        log_message('debug', 'Skipping empty row: ' . $row);
+                        continue;
+                    }
+                    
+                    // Break jika menemukan baris dengan CKD kosong (menandakan akhir data)
+                    if (empty($ckd)) {
+                        log_message('debug', 'Found empty CKD at row ' . $row . ', stopping import');
+                        break;
+                    }
+                    
+                    // Ambil data dari kolom lain
+                    $periodRaw = $sheet->getCell('B' . $row)->getValue(); // Column B
+                    $description = $sheet->getCell('C' . $row)->getValue(); // Column C
+                    $part_no = $sheet->getCell('D' . $row)->getValue(); // Column D
+                    $class = $sheet->getCell('E' . $row)->getValue(); // Column E
+                    $beginning = $sheet->getCell('F' . $row)->getValue(); // Column F
+                    
+                    // Skip jika part_no kosong (data penting)
+                    if (empty($part_no)) {
+                        log_message('warning', 'Row ' . $row . ' skipped: Missing Part No');
+                        $errorCount++;
+                        continue;
+                    }
+                    
+                    // Format tanggal period dengan benar
+                    $period = null;
+                    
+                    if (is_numeric($periodRaw)) {
+                        // Jika tanggal dalam format Excel numeric
+                        $dateObj = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($periodRaw);
+                        $period = $dateObj->format('Y-m-d');
+                        log_message('debug', 'Converted numeric Excel date: ' . $periodRaw . ' to ' . $period);
+                    } else if ($periodRaw instanceof \DateTime) {
+                        // Jika sudah berupa objek DateTime
+                        $period = $periodRaw->format('Y-m-d');
+                    } else if (is_string($periodRaw) && !empty($periodRaw)) {
+                        // Coba berbagai format tanggal umum
+                        $formats = [
+                            'd/m/y',     // 01/05/25
+                            'd-m-y',     // 01-05-25
+                            'Y-m-d',     // 2025-05-01
+                            'd/m/Y',     // 01/05/2025
+                            'm/d/Y',     // 05/01/2025
+                            'd-m-Y'      // 01-05-2025
+                        ];
+                        
+                        foreach ($formats as $format) {
+                            $date = \DateTime::createFromFormat($format, $periodRaw);
+                            if ($date !== false) {
+                                $period = $date->format('Y-m-d');
+                                log_message('debug', 'Parsed with format "' . $format . '" date "' . $periodRaw . '" as "' . $period . '"');
+                                break;
+                            }
+                        }
+                        
+                        // Jika belum berhasil, coba parse secara umum
+                        if ($period === null) {
+                            try {
+                                $date = new \DateTime($periodRaw);
+                                $period = $date->format('Y-m-d');
+                                log_message('debug', 'Parsed with DateTime constructor: "' . $periodRaw . '" as "' . $period . '"');
+                            } catch (\Exception $e) {
+                                log_message('error', 'Failed to parse date: "' . $periodRaw . '" at row ' . $row . ': ' . $e->getMessage());
+                            }
+                        }
+                    }
+                    
+                    // Jika semua metode gagal, gunakan tanggal hari ini
+                    if ($period === null) {
+                        $period = date('Y-m-d');
+                        log_message('warning', 'Using today as fallback for unparseable date: "' . $periodRaw . '" at row ' . $row);
+                    }
+                    
+                    // Pastikan class adalah angka
+                    $class = is_numeric($class) ? $class : null;
+                    
+                    $rowData = [
+                        'ckd' => $ckd,
+                        'period' => $period,
+                        'description' => $description,
+                        'part_no' => $part_no,
+                        'class' => $class,
+                        'beginning' => $beginning
+                    ];
+                    
+                    try {
+                        if ($this->stockMaterialModel->save($rowData)) {
+                            $successCount++;
+                        } else {
+                            $errorCount++;
+                            log_message('error', 'Failed to save Material data at row ' . $row . ': ' . json_encode($this->stockMaterialModel->errors()));
+                        }
+                    } catch (\Exception $e) {
+                        $errorCount++;
+                        log_message('error', 'Exception when saving Material data at row ' . $row . ': ' . $e->getMessage());
+                    }
+                }
+                
+                // Commit transaksi jika ada data yang berhasil disimpan
+                if ($successCount > 0) {
+                    $db->transCommit();
+                    return $this->response->setJSON([
+                        'status' => 'success',
+                        'message' => "Import completed: {$successCount} records added successfully, {$errorCount} failed"
+                    ]);
+                } else {
+                    // Rollback jika tidak ada data yang berhasil disimpan
+                    $db->transRollback();
+                    return $this->response->setJSON([
+                        'status' => 'error',
+                        'message' => "Import failed: No records were imported successfully. Please check the log for details."
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Rollback jika terjadi exception
+                if (isset($db) && $db->transStatus() === false) {
+                    $db->transRollback();
+                }
+                log_message('error', 'Exception during Material import: ' . $e->getMessage());
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => "Import failed: " . $e->getMessage()
+                ]);
+            }
+        } else {
+            // Untuk form submission biasa
+            $file = $this->request->getFile('excel_file');
+            
+            if (!$file->isValid()) {
+                return redirect()->to('/admin/material/material-control')->with('error', 'Invalid file');
+            }
+            
+            try {
+                // Memulai transaksi database
+                $db = \Config\Database::connect();
+                $db->transBegin();
+                
+                // Baca file Excel
+                $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+                $reader->setReadDataOnly(true);
+                $spreadsheet = $reader->load($file->getTempName());
+                $sheet = $spreadsheet->getActiveSheet();
+                $highestRow = $sheet->getHighestRow();
+                
+                $successCount = 0;
+                $errorCount = 0;
+                
+                for ($row = 2; $row <= $highestRow; $row++) {
+                    $ckd = $sheet->getCell('A' . $row)->getValue(); // Column A
+                    
+                    // Skip empty rows
+                    if (empty($ckd)) {
+                        continue;
+                    }
+                    
+                    // Break jika menemukan baris dengan CKD kosong (menandakan akhir data)
+                    if (empty($ckd)) {
+                        break;
+                    }
+                    
+                    // Ambil data dari kolom lain
+                    $periodRaw = $sheet->getCell('B' . $row)->getValue(); // Column B
+                    $description = $sheet->getCell('C' . $row)->getValue(); // Column C
+                    $part_no = $sheet->getCell('D' . $row)->getValue(); // Column D
+                    $class = $sheet->getCell('E' . $row)->getValue(); // Column E
+                    $beginning = $sheet->getCell('F' . $row)->getValue(); // Column F
+                    
+                    // Skip jika part_no kosong (data penting)
+                    if (empty($part_no)) {
+                        $errorCount++;
+                        continue;
+                    }
+                    
+                    // Format tanggal period dengan benar
+                    $period = null;
+                    
+                    if (is_numeric($periodRaw)) {
+                        // Jika tanggal dalam format Excel numeric
+                        $dateObj = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($periodRaw);
+                        $period = $dateObj->format('Y-m-d');
+                    } else if ($periodRaw instanceof \DateTime) {
+                        // Jika sudah berupa objek DateTime
+                        $period = $periodRaw->format('Y-m-d');
+                    } else if (is_string($periodRaw) && !empty($periodRaw)) {
+                        // Coba berbagai format tanggal umum
+                        $formats = [
+                            'd/m/y',     // 01/05/25
+                            'd-m-y',     // 01-05-25
+                            'Y-m-d',     // 2025-05-01
+                            'd/m/Y',     // 01/05/2025
+                            'm/d/Y',     // 05/01/2025
+                            'd-m-Y'      // 01-05-2025
+                        ];
+                        
+                        foreach ($formats as $format) {
+                            $date = \DateTime::createFromFormat($format, $periodRaw);
+                            if ($date !== false) {
+                                $period = $date->format('Y-m-d');
+                                break;
+                            }
+                        }
+                        
+                        // Jika belum berhasil, coba parse secara umum
+                        if ($period === null) {
+                            try {
+                                $date = new \DateTime($periodRaw);
+                                $period = $date->format('Y-m-d');
+                            } catch (\Exception $e) {
+                                // Gagal parse tanggal
+                                log_message('error', 'Failed to parse date: ' . $periodRaw . ' - ' . $e->getMessage());
+                            }
+                        }
+                    }
+                    
+                    // Jika semua metode gagal, gunakan tanggal hari ini
+                    if ($period === null) {
+                        $period = date('Y-m-d');
+                        log_message('warning', 'Using today as fallback for unparseable date at row ' . $row);
+                    }
+                    
+                    // Pastikan class adalah angka
+                    $class = is_numeric($class) ? $class : null;
+                    
+                    $rowData = [
+                        'ckd' => $ckd,
+                        'period' => $period,
+                        'description' => $description,
+                        'part_no' => $part_no,
+                        'class' => $class,
+                        'beginning' => $beginning
+                    ];
+                    
+                    try {
+                        if ($this->stockMaterialModel->save($rowData)) {
+                            $successCount++;
+                        } else {
+                            $errorCount++;
+                            log_message('error', 'Failed to save Material data at row ' . $row . ': ' . json_encode($this->stockMaterialModel->errors()));
+                        }
+                    } catch (\Exception $e) {
+                        $errorCount++;
+                        log_message('error', 'Exception when saving Material data at row ' . $row . ': ' . $e->getMessage());
+                    }
+                }
+                
+                // Commit transaksi jika ada data yang berhasil disimpan
+                if ($successCount > 0) {
+                    $db->transCommit();
+                    return redirect()->to('/admin/material/material-control')
+                        ->with('success', "Import completed: {$successCount} records added successfully, {$errorCount} failed");
+                } else {
+                    // Rollback jika tidak ada data yang berhasil disimpan
+                    $db->transRollback();
+                    return redirect()->to('/admin/material/material-control')
+                        ->with('error', "Import failed: No records were imported successfully. Please check the log for details.");
+                }
+            } catch (\Exception $e) {
+                // Rollback jika terjadi exception
+                if (isset($db) && $db->transStatus() === false) {
+                    $db->transRollback();
+                }
+                return redirect()->to('/admin/material/material-control')
+                    ->with('error', "Import failed: " . $e->getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Export data Material ke file Excel
+     */
+    public function exportMaterial()
+    {
+        // Ambil parameter filter dari request
+        $ckd = $this->request->getGet('ckd');
+        $part_no = $this->request->getGet('part_no');
+        $class = $this->request->getGet('class');
+        $period_start = $this->request->getGet('period_start');
+        $period_end = $this->request->getGet('period_end');
+        
+        // Siapkan filter
+        $filters = [];
+        if (!empty($ckd)) $filters['ckd'] = $ckd;
+        if (!empty($part_no)) $filters['part_no'] = $part_no;
+        if (!empty($class)) $filters['class'] = $class;
+        if (!empty($period_start)) $filters['period_start'] = $period_start;
+        if (!empty($period_end)) $filters['period_end'] = $period_end;
+        
+        // Simpan filter ke session untuk digunakan kembali
+        session()->set('material_filters', $filters);
+        
+        // Ambil data material berdasarkan filter
+        $materials = $this->stockMaterialModel->getMaterials($filters);
+        
+        // Buat spreadsheet baru
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Material Control');
+        
+        // Set header
+        $headers = ['CKD', 'Period', 'Description', 'Part No', 'Class', 'Beginning'];
+        $columns = ['A', 'B', 'C', 'D', 'E', 'F'];
+        
+        foreach ($columns as $index => $column) {
+            $sheet->setCellValue($column . '1', $headers[$index]);
+        }
+        
+        // Style header
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '4472C4'],
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+        ];
+        
+        $sheet->getStyle('A1:F1')->applyFromArray($headerStyle);
+        
+        // Isi data
+        $row = 2;
+        foreach ($materials as $material) {
+            $sheet->setCellValue('A' . $row, $material['ckd'] ?? '');
+            
+            // Format tanggal jika ada
+            if (!empty($material['period'])) {
+                try {
+                    $date = new \DateTime($material['period']);
+                    $sheet->setCellValue('B' . $row, $date->format('d/m/y'));
+                } catch (\Exception $e) {
+                    $sheet->setCellValue('B' . $row, $material['period']);
+                }
+            } else {
+                $sheet->setCellValue('B' . $row, '');
+            }
+            
+            $sheet->setCellValue('C' . $row, $material['description'] ?? '');
+            $sheet->setCellValue('D' . $row, $material['part_no'] ?? '');
+            $sheet->setCellValue('E' . $row, $material['class'] ?? '');
+            $sheet->setCellValue('F' . $row, $material['beginning'] ?? '');
+            
+            $row++;
+        }
+        
+        // Style untuk data
+        $dataStyle = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+        
+        // Auto size kolom
+        foreach ($columns as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        
+        // Set border untuk semua data
+        $lastRow = count($materials) > 0 ? ($row - 1) : 1;
+        $dataRange = 'A1:F' . $lastRow;
+        $sheet->getStyle($dataRange)->applyFromArray($dataStyle);
+        
+        // Set nama file
+        $filename = 'material_control_export_' . date('YmdHis') . '.xlsx';
+        
+        // Set header untuk download
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        
+        // Tulis ke output
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
     
     /**

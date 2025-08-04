@@ -40,6 +40,15 @@ $routes->group('admin/material', ['filter' => 'auth'], function ($routes) {
     
     // Material Control routes
     $routes->get('material-control', 'MaterialController::materialControl');
+    $routes->get('control', 'MaterialController::materialControl');
+    $routes->get('add-material', 'MaterialController::addMaterial');
+    $routes->post('save-material', 'MaterialController::saveMaterial');
+    $routes->get('edit-material/(:num)', 'MaterialController::editMaterial/$1');
+    $routes->post('update-material/(:num)', 'MaterialController::updateMaterial/$1');
+    $routes->post('delete-material/(:num)', 'MaterialController::deleteMaterial/$1');
+    $routes->get('get-material/(:num)', 'MaterialController::getMaterial/$1');
+    $routes->post('import-material', 'MaterialController::importMaterial');
+    $routes->get('export-material', 'MaterialController::exportMaterial');
     
     // Shipment Schedule routes
     $routes->get('shipment-schedule', 'MaterialController::shipmentSchedule');
