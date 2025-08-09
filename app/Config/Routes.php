@@ -27,6 +27,16 @@ $routes->post('admin/sales/upload', 'SalesController::upload', ['filter' => 'aut
 $routes->get('admin/sales/actual', 'SalesActualController::index', ['filter' => 'auth']);
 $routes->post('admin/sales/actual/upload', 'SalesActualController::upload', ['filter' => 'auth']);
 
+// Report routes
+$routes->group('admin/report', ['filter' => 'auth'], function ($routes) {
+    $routes->get('/', 'ReportController::index');
+    $routes->get('delivery-shortage', 'ReportController::deliveryShortage');
+    $routes->post('delivery-shortage/data', 'ReportController::getDeliveryShortageData');
+    $routes->get('delivery-shortage/export', 'ReportController::exportDeliveryShortage');
+    $routes->get('delivery-shortage/models', 'ReportController::getAvailableModels');
+    $routes->get('delivery-shortage/classes', 'ReportController::getAvailableClasses');
+});
+
 // Material Control routes
 $routes->group('admin/material', ['filter' => 'auth'], function ($routes) {
     $routes->get('/', 'MaterialController::index');

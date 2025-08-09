@@ -129,10 +129,20 @@
                         </div>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link <?= (strpos(uri_string(), 'admin/report') === 0) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#reportSubmenu" role="button" aria-expanded="<?= (strpos(uri_string(), 'admin/report') === 0) ? 'true' : 'false' ?>" aria-controls="reportSubmenu">
                             <i class="fas fa-file-alt fa-fw"></i>
-                            Report
+                            Report <i class="fas fa-chevron-down ms-1"></i>
                         </a>
+                        <div class="collapse <?= (strpos(uri_string(), 'admin/report') === 0) ? 'show' : '' ?>" id="reportSubmenu">
+                            <ul class="nav flex-column ps-3">
+                                <li class="nav-item">
+                                    <a class="nav-link <?= (uri_string() == 'admin/report/delivery-shortage') ? 'active' : '' ?>" href="/admin/report/delivery-shortage">
+                                        <i class="fas fa-chart-line fa-fw"></i>
+                                        Delivery Shortage
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
                 </ul>
             </div>
