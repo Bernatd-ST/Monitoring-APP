@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\Models\MasterBomModel;
 use App\Models\StockMaterialModel;
+use App\Models\ShipmentScheduleModel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -16,11 +17,13 @@ class MaterialController extends BaseController
 {
     protected $masterBomModel;
     protected $stockMaterialModel;
+    protected $shipmentScheduleModel;
     
     public function __construct()
     {
         $this->masterBomModel = new MasterBomModel();
         $this->stockMaterialModel = new StockMaterialModel();
+        $this->shipmentScheduleModel = new ShipmentScheduleModel();
     }
     
     /**
@@ -1379,10 +1382,507 @@ class MaterialController extends BaseController
      */
     public function shipmentSchedule()
     {
+        // Ambil parameter filter dari request
+        $inv_no = $this->request->getGet('inv_no');
+        $item_no = $this->request->getGet('item_no');
+        $class = $this->request->getGet('class');
+        $sch_qty = $this->request->getGet('sch_qty');
+
+        $filter = [];
+        if (!empty($inv_no)) {
+            $filter['inv_no'] = $inv_no;
+        }
+        if (!empty($item_no)) {
+            $filter['item_no'] = $item_no;
+        }
+        if (!empty($class)) {
+            $filter['class'] = $class;
+        }
+        if (!empty($sch_qty)) {
+            $filter['sch_qty'] = $sch_qty;
+        }
+
+        session()->set('shipment_schedule_filter', $filter);
+        log_message('info', 'Shipment Schedule filter: ' . json_encode($filter));
+
+        $shipmentSchedule = $this->shipmentScheduleModel->getMaterials($filter);
+
+        // Dapatkan nilai unik untuk dropdown filter
+        $uniqueInvNos = $this->shipmentScheduleModel->getUniqueValues('inv_no');
+        $uniqueItemNos = $this->shipmentScheduleModel->getUniqueValues('item_no');
+        $uniqueClasses = $this->shipmentScheduleModel->getUniqueValues('class');
+        $uniqueSchQtys = $this->shipmentScheduleModel->getUniqueValues('sch_qty');
+
+        if (count($shipmentSchedule) === 0 && !empty($filter)) {
+            log_message('info', 'No data found with filters, checking if any data exists in the table');
+            $all_data = $this->shipmentScheduleModel->findAll();
+            log_message('info', 'Total records in table without filter: ' . count($all_data));
+        }
+
         $data = [
-            'title' => 'Shipment Schedule'
+            'title' => 'Shipment Schedule',
+            'shipmentSchedule' => $shipmentSchedule,
+            'filter' => $filter,
+            'uniqueInvNos' => $uniqueInvNos,
+            'uniqueItemNos' => $uniqueItemNos,
+            'uniqueClasses' => $uniqueClasses,
+            'uniqueSchQtys' => $uniqueSchQtys
+        ];
+
+        return view('admin/material/shipment_schedule', $data);
+    }
+    
+    /**
+     * Mendapatkan data Shipment Schedule berdasarkan ID (untuk AJAX)
+     */
+    public function getShipmentSchedule($id = null)
+    {
+        if ($id === null) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'ID tidak valid'
+            ]);
+        }
+        
+        $shipment = $this->shipmentScheduleModel->find($id);
+        
+        if ($shipment) {
+            return $this->response->setJSON([
+                'status' => 'success',
+                'data' => $shipment
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Data tidak ditemukan'
+            ]);
+        }
+    }
+    
+    /**
+     * Menambah data Shipment Schedule baru
+     */
+    public function addShipmentSchedule()
+    {
+        // Log data yang diterima untuk debugging
+        log_message('debug', 'addShipmentSchedule called with POST data: ' . json_encode($this->request->getPost()));
+        
+        // Validasi input
+        $rules = [
+            'inv_no' => 'required',
+            'item_no' => 'required',
+            'class' => 'required',
+            'sch_qty' => 'required|numeric'
+            // Tanggal tidak wajib diisi
         ];
         
-        return view('admin/material/shipment_schedule', $data);
+        if (!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            log_message('error', 'Validation failed: ' . json_encode($errors));
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => $errors
+            ]);
+        }
+        
+        $data = [
+            'inv_no' => $this->request->getPost('inv_no'),
+            'item_no' => $this->request->getPost('item_no'),
+            'class' => $this->request->getPost('class'),
+            'sch_qty' => $this->request->getPost('sch_qty')
+        ];
+        
+        // Tambahkan tanggal jika ada
+        $etd_date = $this->request->getPost('etd_date');
+        if (!empty($etd_date)) {
+            $data['etd_date'] = $etd_date;
+        }
+        
+        $eta_date = $this->request->getPost('eta_date');
+        if (!empty($eta_date)) {
+            $data['eta_date'] = $eta_date;
+        }
+
+        $eta_meina = $this->request->getPost('eta_meina');
+        if (!empty($eta_meina)) {
+            $data['eta_meina'] = $eta_meina;
+        }
+        
+        try {
+            if ($this->shipmentScheduleModel->insert($data)) {
+                log_message('info', 'Shipment schedule added successfully: ' . json_encode($data));
+                return $this->response->setJSON([
+                    'status' => 'success',
+                    'message' => 'Data shipment schedule berhasil ditambahkan'
+                ]);
+            } else {
+                $errors = $this->shipmentScheduleModel->errors();
+                log_message('error', 'Failed to add shipment schedule: ' . json_encode($errors));
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Gagal menambahkan data: ' . implode(', ', $errors)
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception when adding shipment schedule: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal menambahkan data: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Mengupdate data Shipment Schedule
+     */
+    public function updateShipmentSchedule($id = null)
+    {
+        if ($id === null) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'ID tidak valid'
+            ]);
+        }
+        
+        // Validasi input
+        $rules = [
+            'inv_no' => 'required',
+            'item_no' => 'required',
+            'class' => 'required',
+            'sch_qty' => 'required|numeric',
+            'etd_date' => 'required',
+            'eta_date' => 'required',
+            'eta_meina' => 'required'
+        ];
+        
+        if (!$this->validate($rules)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => $this->validator->getErrors()
+            ]);
+        }
+        
+        $data = [
+            'inv_no' => $this->request->getPost('inv_no'),
+            'item_no' => $this->request->getPost('item_no'),
+            'class' => $this->request->getPost('class'),
+            'sch_qty' => $this->request->getPost('sch_qty'),
+            'etd_date' => $this->request->getPost('etd_date'),
+            'eta_date' => $this->request->getPost('eta_date'),
+            'eta_meina' => $this->request->getPost('eta_meina')
+        ];
+        
+        try {
+            $this->shipmentScheduleModel->update($id, $data);
+            
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data shipment schedule berhasil diupdate'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error updating shipment schedule: ' . $e->getMessage());
+            
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal mengupdate data: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Menghapus data Shipment Schedule
+     */
+    public function deleteShipmentSchedule($id = null)
+    {
+        if ($id === null) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'ID tidak valid'
+            ]);
+        }
+        
+        try {
+            $this->shipmentScheduleModel->delete($id);
+            
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data shipment schedule berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error deleting shipment schedule: ' . $e->getMessage());
+            
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal menghapus data: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Import data Shipment Schedule dari file Excel
+     */
+    public function importShipmentSchedule()
+    {
+        $file = $this->request->getFile('excel_file');
+        
+        // Validasi file
+        if (!$file->isValid() || $file->getError() > 0) {
+            session()->setFlashdata('error', 'File tidak valid atau terjadi kesalahan saat upload');
+            return redirect()->to('admin/material/shipment-schedule');
+        }
+        
+        $ext = $file->getClientExtension();
+        if ($ext != 'xlsx' && $ext != 'xls') {
+            session()->setFlashdata('error', 'Format file harus Excel (.xlsx atau .xls)');
+            return redirect()->to('admin/material/shipment-schedule');
+        }
+        
+        try {
+            // Pindahkan file ke temporary directory
+            $file->move(WRITEPATH . 'uploads');
+            $filepath = WRITEPATH . 'uploads/' . $file->getName();
+            
+            // Baca file Excel
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader(ucfirst($ext));
+            $spreadsheet = $reader->load($filepath);
+            $sheet = $spreadsheet->getActiveSheet();
+            $highestRow = $sheet->getHighestRow();
+            
+            $successCount = 0;
+            $errorCount = 0;
+            $errors = [];
+            
+            // Mulai dari baris ke-2 (asumsikan baris 1 adalah header)
+            for ($row = 2; $row <= $highestRow; $row++) {
+                $inv_no = $sheet->getCell('A' . $row)->getValue(); // Kolom A
+                
+                // Hentikan proses jika menemukan baris kosong
+                if (empty($inv_no)) {
+                    log_message('info', 'Import stopped at row ' . $row . ' due to empty inv_no');
+                    break;
+                }
+                
+                $item_no = $sheet->getCell('B' . $row)->getValue(); // Kolom B
+                $class = $sheet->getCell('C' . $row)->getValue(); // Kolom C
+                $sch_qty = $sheet->getCell('D' . $row)->getValue(); // Kolom D
+                $etd_date_raw = $sheet->getCell('E' . $row)->getValue(); // Kolom E
+                $eta_date_raw = $sheet->getCell('F' . $row)->getValue(); // Kolom F
+                $eta_meina_raw = $sheet->getCell('G' . $row)->getValue(); // Kolom G
+                
+                // Konversi tanggal Excel ke format MySQL
+                $etd_date = null;
+                $eta_date = null;
+                $eta_meina = null;
+                
+                // Konversi tanggal ETD
+                if (!empty($etd_date_raw)) {
+                    if (is_numeric($etd_date_raw)) {
+                        // Jika tanggal dalam format Excel numeric
+                        $dateObj = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($etd_date_raw);
+                        $etd_date = $dateObj->format('Y-m-d');
+                    } else {
+                        $etd_date = $this->shipmentScheduleModel->formatExcelDate($etd_date_raw);
+                    }
+                }
+                
+                // Konversi tanggal ETA
+                if (!empty($eta_date_raw)) {
+                    if (is_numeric($eta_date_raw)) {
+                        // Jika tanggal dalam format Excel numeric
+                        $dateObj = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($eta_date_raw);
+                        $eta_date = $dateObj->format('Y-m-d');
+                    } else {
+                        $eta_date = $this->shipmentScheduleModel->formatExcelDate($eta_date_raw);
+                    }
+                }
+                
+                // Konversi tanggal ETA Meina
+                if (!empty($eta_meina_raw)) {
+                    if (is_numeric($eta_meina_raw)) {
+                        // Jika tanggal dalam format Excel numeric
+                        $dateObj = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($eta_meina_raw);
+                        $eta_meina = $dateObj->format('Y-m-d');
+                    } else {
+                        $eta_meina = $this->shipmentScheduleModel->formatExcelDate($eta_meina_raw);
+                    }
+                }
+                
+                // Validasi data
+                if (empty($inv_no) || empty($item_no) || empty($class) || empty($sch_qty)) {
+                    $errorCount++;
+                    $errors[] = 'Baris ' . $row . ': Data tidak lengkap';
+                    continue;
+                }
+                
+                // Siapkan data untuk disimpan
+                $data = [
+                    'inv_no' => $inv_no,
+                    'item_no' => $item_no,
+                    'class' => $class,
+                    'sch_qty' => $sch_qty,
+                    'etd_date' => $etd_date,
+                    'eta_date' => $eta_date,
+                    'eta_meina' => $eta_meina
+                ];
+                
+                // Cek apakah data sudah ada (berdasarkan kombinasi inv_no dan item_no)
+                $existingData = $this->shipmentScheduleModel->where('inv_no', $inv_no)
+                                                         ->where('item_no', $item_no)
+                                                         ->first();
+                
+                if ($existingData) {
+                    // Update data yang sudah ada
+                    $this->shipmentScheduleModel->update($existingData['id'], $data);
+                } else {
+                    // Tambahkan data baru
+                    $this->shipmentScheduleModel->insert($data);
+                }
+                
+                $successCount++;
+            }
+            
+            // Hapus file temporary
+            unlink($filepath);
+            
+            // Set flashdata untuk notifikasi
+            if ($errorCount > 0) {
+                $errorMessage = 'Import selesai dengan ' . $successCount . ' data berhasil dan ' . $errorCount . ' data gagal. Error: ' . implode(', ', $errors);
+                session()->setFlashdata('error', $errorMessage);
+            } else {
+                session()->setFlashdata('success', 'Import berhasil! ' . $successCount . ' data telah diimport.');
+            }
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error importing shipment schedule: ' . $e->getMessage());
+            session()->setFlashdata('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+        
+        return redirect()->to('admin/material/shipment-schedule');
+    }
+    
+    /**
+     * Export data Shipment Schedule ke file Excel
+     */
+    public function exportShipmentSchedule()
+    {
+        // Ambil filter dari session jika ada
+        $filter = session()->get('shipment_schedule_filter') ?? [];
+        
+        // Ambil data sesuai filter
+        $shipmentSchedule = $this->shipmentScheduleModel->getMaterials($filter);
+        
+        // Buat spreadsheet baru
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Set judul kolom
+        $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+        $headers = ['Invoice No', 'Part No', 'Class', 'Schedule Qty', 'ETD Date', 'ETA Date', 'ETA Meina'];
+        
+        foreach (array_combine($columns, $headers) as $column => $header) {
+            $sheet->setCellValue($column . '1', $header);
+        }
+        
+        // Style untuk header
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '4e73df'],
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                ],
+            ],
+        ];
+        
+        $sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
+        
+        // Isi data
+        $row = 2;
+        foreach ($shipmentSchedule as $item) {
+            $sheet->setCellValue('A' . $row, $item['inv_no'] ?? '');
+            $sheet->setCellValue('B' . $row, $item['item_no'] ?? '');
+            $sheet->setCellValue('C' . $row, $item['class'] ?? '');
+            $sheet->setCellValue('D' . $row, $item['sch_qty'] ?? '');
+            
+            // Format tanggal ETD jika ada
+            if (!empty($item['etd_date'])) {
+                try {
+                    $date = new \DateTime($item['etd_date']);
+                    $sheet->setCellValue('E' . $row, $date->format('d/m/y'));
+                } catch (\Exception $e) {
+                    $sheet->setCellValue('E' . $row, $item['etd_date']);
+                }
+            } else {
+                $sheet->setCellValue('E' . $row, '');
+            }
+            
+            // Format tanggal ETA jika ada
+            if (!empty($item['eta_date'])) {
+                try {
+                    $date = new \DateTime($item['eta_date']);
+                    $sheet->setCellValue('F' . $row, $date->format('d/m/y'));
+                } catch (\Exception $e) {
+                    $sheet->setCellValue('F' . $row, $item['eta_date']);
+                }
+            } else {
+                $sheet->setCellValue('F' . $row, '');
+            }
+            
+            // Format tanggal ETA Meina jika ada
+            if (!empty($item['eta_meina'])) {
+                try {
+                    $date = new \DateTime($item['eta_meina']);
+                    $sheet->setCellValue('G' . $row, $date->format('d/m/y'));
+                } catch (\Exception $e) {
+                    $sheet->setCellValue('G' . $row, $item['eta_meina']);
+                }
+            } else {
+                $sheet->setCellValue('G' . $row, '');
+            }
+            
+            $row++;
+        }
+        
+        // Style untuk data
+        $dataStyle = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                ],
+            ],
+        ];
+        
+        // Auto size kolom
+        foreach ($columns as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        
+        // Set border untuk semua data
+        $lastRow = count($shipmentSchedule) > 0 ? ($row - 1) : 1;
+        $dataRange = 'A1:G' . $lastRow;
+        $sheet->getStyle($dataRange)->applyFromArray($dataStyle);
+        
+        // Set nama file
+        $filename = 'shipment_schedule_export_' . date('YmdHis') . '.xlsx';
+        
+        // Set header untuk download
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        
+        // Tulis ke output
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 }

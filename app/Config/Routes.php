@@ -19,9 +19,13 @@ $routes->get('/logout', 'AuthController::logout');
 
 $routes->get('admin/dashboard', 'Dashboard::index', ['filter' => 'auth']);
 
-// Sales routes
-$routes->get('admin/sales', 'SalesController::index', ['filter' => 'auth']);
+// Sales planing routes
+$routes->get('admin/sales/sales', 'SalesController::index', ['filter' => 'auth']);
 $routes->post('admin/sales/upload', 'SalesController::upload', ['filter' => 'auth']);
+
+// Sales actual routes
+$routes->get('admin/sales/actual', 'SalesActualController::index', ['filter' => 'auth']);
+$routes->post('admin/sales/actual/upload', 'SalesActualController::upload', ['filter' => 'auth']);
 
 // Material Control routes
 $routes->group('admin/material', ['filter' => 'auth'], function ($routes) {
@@ -52,6 +56,13 @@ $routes->group('admin/material', ['filter' => 'auth'], function ($routes) {
     
     // Shipment Schedule routes
     $routes->get('shipment-schedule', 'MaterialController::shipmentSchedule');
+    $routes->get('get-shipment-schedule/(:num)', 'MaterialController::getShipmentSchedule/$1');
+    $routes->post('add-shipment-schedule', 'MaterialController::addShipmentSchedule');
+    $routes->post('update-shipment-schedule/(:num)', 'MaterialController::updateShipmentSchedule/$1');
+    $routes->post('delete-shipment-schedule/(:num)', 'MaterialController::deleteShipmentSchedule/$1');
+    $routes->post('import-shipment-schedule', 'MaterialController::importShipmentSchedule');
+    $routes->get('export-shipment-schedule', 'MaterialController::exportShipmentSchedule');
+    
 });
 
 // PPIC routes

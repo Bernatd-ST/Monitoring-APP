@@ -45,10 +45,10 @@
     
     <!-- Filter Section (Hidden by default) -->
     <div id="filter-section" class="card-body border-bottom" style="display: none;">
-        <form id="filterForm" class="row g-3">
+        <form id="filterForm" method="get" action="<?= base_url('admin/ppic/finishgood') ?>" class="row g-3">
             <div class="col-md-3">
                 <label for="criteriaFilter" class="form-label">Criteria</label>
-                <select class="form-select" id="criteriaFilter">
+                <select class="form-select form-select-sm" id="criteriaFilter" name="criteria">
                     <option value="">Semua Criteria</option>
                     <?php if (isset($criteria_list) && is_array($criteria_list)): ?>
                         <?php foreach ($criteria_list as $item): ?>
@@ -58,12 +58,8 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label for="periodFilter" class="form-label">Period</label>
-                <input type="month" class="form-control" id="periodFilter">
-            </div>
-            <div class="col-md-3">
                 <label for="partNoFilter" class="form-label">Part No</label>
-                <select class="form-select" id="partNoFilter">
+                <select class="form-select form-select-sm" id="partNoFilter">
                     <option value="">Semua Part No</option>
                     <?php if (isset($part_no_list) && is_array($part_no_list)): ?>
                         <?php foreach ($part_no_list as $item): ?>
@@ -74,7 +70,7 @@
             </div>
             <div class="col-md-3">
                 <label for="classFilter" class="form-label">Class</label>
-                <select class="form-select" id="classFilter">
+                <select class="form-select form-select-sm" id="classFilter">
                     <option value="">Semua Class</option>
                     <?php if (isset($class_list) && is_array($class_list)): ?>
                         <?php foreach ($class_list as $item): ?>
@@ -102,7 +98,7 @@
                         <th>Description</th>
                         <th>Part No</th>
                         <th>Class</th>
-                        <th>End Balance</th>
+                        <th>Begining Balance</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>

@@ -158,7 +158,7 @@
     
     <div class="card shadow">
         <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="m-0 font-weight-bold">Material Control</h5>
+            <h5 class="m-0 font-weight-bold">Stock Material</h5>
             <div>
                 <button id="addMaterialBtn" class="btn btn-sm btn-light mr-2" onclick="window.location.href='<?= base_url('admin/material/add-material') ?>'">
                     <i class="fas fa-plus"></i> Add
@@ -329,7 +329,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="importModalLabel">Import Material Control Data</h5>
+                <h5 class="modal-title" id="importModalLabel">Import Stock Material Data</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="<?= base_url('admin/material/import-material') ?>" method="post" enctype="multipart/form-data" id="importForm">
@@ -350,9 +350,6 @@
                             <li>Beginning (Column F)</li>
                         </ul>
                         <p class="mt-2 mb-0"><small>Note: First row should be header row. CKD and Part No are required fields.</small></p>
-                    </div>
-                    <div class="alert alert-warning">
-                        <small>Make sure your Excel file follows the exact column order as specified above. The import will stop if it encounters a row with empty CKD or Part No.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -465,9 +462,46 @@ $(document).ready(function() {
     });
     
     // Initialize Select2
-    $('.select2').select2({
-        theme: 'bootstrap4',
+    $('#filterUpdate').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Pilih Update Value',
+        allowClear: true,
+        dropdownParent: $('#filterSection')
     });
+    
+    $('#filterPrdcode').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Pilih Product Code',
+        allowClear: true,
+        dropdownParent: $('#filterSection')
+    });
+    
+    $('#filterClass').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Pilih Class',
+        allowClear: true,
+        dropdownParent: $('#filterSection')
+    });
+
+    $('#filterDescription').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Pilih Description',
+        allowClear: true,
+        dropdownParent: $('#filterSection')
+    });
+
+    $('#filterPartNo').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Pilih Part No',
+        allowClear: true,
+        dropdownParent: $('#filterSection')
+    });
+
     
     // Toggle filter section
     $('#toggleFilter').click(function() {

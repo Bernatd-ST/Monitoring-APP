@@ -3,19 +3,20 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
-use App\Models\SalesModel; // <-- Tambahkan ini
-use PhpOffice\PhpSpreadsheet\Reader\Xlsx; // <-- Tambahkan ini
+use App\Models\ActualSalesModel;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
-class SalesController extends BaseController
+class SalesActualController extends BaseController
 {
     public function index()
     {
-        $salesModel = new SalesModel();
-        $data['sales_data'] = $salesModel->findAll();
+        $actualSalesModel = new ActualSalesModel();
+        $data['sales_data'] = $actualSalesModel->findAll();
         
         // Mengambil daftar unik model_no untuk dropdown filter
         $db = db_connect();
-        $data['model_list'] = $db->table('sales')
+        $data['model_list'] = $db->table('actual_sales')
                              ->select('model_no')
                              ->distinct()
                              ->orderBy('model_no', 'ASC')
@@ -23,7 +24,7 @@ class SalesController extends BaseController
                              ->getResultArray();
         
         // Mengambil daftar unik class untuk dropdown filter
-        $data['class_list'] = $db->table('sales')
+        $data['class_list'] = $db->table('actual_sales')
                              ->select('class')
                              ->where('class !=', '')
                              ->distinct()
@@ -31,11 +32,21 @@ class SalesController extends BaseController
                              ->get()
                              ->getResultArray();
         
-        return view('admin/sales/sales', [
-            'title' => 'Sales Data', 
+        // Mengambil daftar unik product code untuk dropdown filter
+        $data['prd_cd_list'] = $db->table('actual_sales')
+                             ->select('prd_cd')
+                             ->where('prd_cd !=', '')
+                             ->distinct()
+                             ->orderBy('prd_cd', 'ASC')
+                             ->get()
+                             ->getResultArray();
+        
+        return view('admin/sales/actual', [
+            'title' => 'Actual Sales Data', 
             'sales_data' => $data['sales_data'],
             'model_list' => $data['model_list'],
-            'class_list' => $data['class_list']
+            'class_list' => $data['class_list'],
+            'prd_cd_list' => $data['prd_cd_list']
         ]);
     }
     //     $salesModel = new SalesModel();
@@ -108,15 +119,14 @@ class SalesController extends BaseController
     //     }
     // }
 
-    // Tambahkan debuging untuk melihat data yang akan dimasukkan
     public function upload()
     {
         $file = $this->request->getFile('excel_file');
-        $salesModel = new SalesModel();
+        $actualSalesModel = new ActualSalesModel();
         
         // Buat log file untuk debugging
-        $log_path = WRITEPATH . 'logs/excel_import_debug.log';
-        file_put_contents($log_path, "=== Excel Import Debug Log ===\n", FILE_APPEND);
+        $log_path = WRITEPATH . 'logs/actual_sales_import_debug.log';
+        file_put_contents($log_path, "=== Actual Sales Excel Import Debug Log ===\n", FILE_APPEND);
 
         // 1. Validasi File
         if ($file && $file->isValid() && !$file->hasMoved()) {
@@ -135,48 +145,73 @@ class SalesController extends BaseController
                 $db->transStart(); // mulai transaksi
 
                 try {
-                    // Kosongkan tabel sebelum import data baru
-                    file_put_contents($log_path, "Table truncated\n", FILE_APPEND);
-
                     $dataCount = 0;
                     // Mulai dari baris 2 (asumsikan baris 1 adalah header)
                     for ($row = 2; $row <= $highestRow; $row++) {
-                        // Gunakan kolom B sebagai model_no karena itu yang memiliki data
-                        $model_no = $sheet->getCell('B' . $row)->getValue();
-                        // Kolom C berisi class
-                        $class = $sheet->getCell('C' . $row)->getValue();
+                        // Kolom A berisi model_no
+                        $model_no = $sheet->getCell('A' . $row)->getValue();
+                        // Kolom B berisi class
+                        $class = $sheet->getCell('B' . $row)->getValue();
+                        // Kolom C berisi sch_qty
+                        $sch_qty = $sheet->getCell('C' . $row)->getValue() ?: 0;
+                        // Kolom D berisi act_qty
+                        $act_qty = $sheet->getCell('D' . $row)->getValue() ?: 0;
+                        // Kolom E berisi prd_cd
+                        $prd_cd = $sheet->getCell('E' . $row)->getValue();
+                        // Kolom F berisi content
+                        $content = $sheet->getCell('F' . $row)->getValue();
+                        // Kolom G berisi shp_date (format: 20-Jun-25)
+                        $shp_date_value = $sheet->getCell('G' . $row)->getValue();
                         
-                        file_put_contents($log_path, "Row $row - Model: $model_no, Class: $class\n", FILE_APPEND);
+                        file_put_contents($log_path, "Row $row - Model: $model_no, Class: $class, ShipDate: $shp_date_value\n", FILE_APPEND);
                         
-                        // Hanya lanjutkan jika model_no tidak kosong dan bukan header
-                        if (!empty($model_no) && $model_no !== "ModelNo.") {
+                        // Hanya lanjutkan jika model_no tidak kosong
+                        if (!empty($model_no)) {
+                            // Format tanggal dengan benar untuk database MySQL
+                            $formatted_date = null;
+                            
+                            if (is_numeric($shp_date_value)) {
+                                // Jika tanggal dalam format Excel numeric
+                                $dateObj = Date::excelToDateTimeObject($shp_date_value);
+                                $formatted_date = $dateObj->format('Y-m-d');
+                                file_put_contents($log_path, "  Converted numeric date: $formatted_date\n", FILE_APPEND);
+                            } else if (is_string($shp_date_value)) {
+                                // Coba parse format tanggal seperti '20-Jun-25'
+                                try {
+                                    // Konversi format dd-MMM-yy ke Y-m-d
+                                    $date = \DateTime::createFromFormat('d-M-y', $shp_date_value);
+                                    if ($date) {
+                                        $formatted_date = $date->format('Y-m-d');
+                                        file_put_contents($log_path, "  Converted string date: $formatted_date\n", FILE_APPEND);
+                                    } else {
+                                        // Coba format lain jika gagal
+                                        $date = date_create_from_format('d-M-Y', $shp_date_value);
+                                        if ($date) {
+                                            $formatted_date = date_format($date, 'Y-m-d');
+                                            file_put_contents($log_path, "  Converted string date (alt format): $formatted_date\n", FILE_APPEND);
+                                        } else {
+                                            file_put_contents($log_path, "  Failed to parse date: $shp_date_value\n", FILE_APPEND);
+                                        }
+                                    }
+                                } catch (\Exception $dateEx) {
+                                    file_put_contents($log_path, "  Date parsing error: " . $dateEx->getMessage() . "\n", FILE_APPEND);
+                                }
+                            }
+                            
                             $dataToInsert = [
                                 'model_no' => $model_no,
                                 'class'    => $class,
+                                'sch_qty'  => $sch_qty,
+                                'act_qty'  => $act_qty,
+                                'prd_cd'   => $prd_cd,
+                                'content'  => $content,
+                                'shp_date' => $formatted_date
                             ];
-                            
-                            // Baca schedule untuk kolom D sampai AH (kolom 4 sampai 34)
-                            $columnIndex = 4; // Mulai dari kolom D (indeks 3) untuk tanggal 1
-                            $total = 0; // Inisialisasi total
-                            
-                            for ($i = 1; $i <= 31; $i++) {
-                                $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnIndex);
-                                $schedule_value = $sheet->getCell($columnLetter . $row)->getValue();
-                                $value = $schedule_value ?: 0;
-                                $dataToInsert["schedule_{$i}"] = $value;
-                                $total += (int)$value; // Tambahkan ke total
-                                file_put_contents($log_path, "  Schedule $i ($columnLetter): " . ($value) . "\n", FILE_APPEND);
-                                $columnIndex++;
-                            }
-                            
-                            // Tambahkan total ke data yang akan diinsert
-                            $dataToInsert['total'] = $total;
-                            file_put_contents($log_path, "  Total: $total\n", FILE_APPEND);
                             
                             // Log data yang akan diinsert
                             file_put_contents($log_path, "Inserting data: " . json_encode($dataToInsert) . "\n", FILE_APPEND);
                             
-                            $result = $salesModel->insert($dataToInsert);
+                            $result = $actualSalesModel->insert($dataToInsert);
                             file_put_contents($log_path, "Insert result: " . ($result ? "Success" : "Failed") . "\n", FILE_APPEND);
                             
                             if ($result) {
@@ -194,23 +229,23 @@ class SalesController extends BaseController
 
                     if ($db->transStatus() === false) {
                         file_put_contents($log_path, "Transaction failed\n", FILE_APPEND);
-                        return redirect()->to('/admin/sales/sales')->with('error', 'Terjadi kesalahan saat menyimpan data ke database.');
+                        return redirect()->to('/admin/sales/actual')->with('error', 'Terjadi kesalahan saat menyimpan data ke database.');
                     }
 
                     file_put_contents($log_path, "Transaction completed successfully\n", FILE_APPEND);
-                    return redirect()->to('/admin/sales/sales')->with('success', "File Excel berhasil di-upload dan $dataCount data telah diperbarui. Data akan ditampilkan di bawah.");
+                    return redirect()->to('/admin/sales/actual')->with('success', "File Excel berhasil di-upload dan $dataCount data telah diperbarui. Data akan ditampilkan di bawah.");
                 
                 } catch (\Exception $e) {
                     file_put_contents($log_path, "Exception: " . $e->getMessage() . "\n", FILE_APPEND);
-                    return redirect()->to('/admin/sales/sales')->with('error', 'Terjadi kesalahan saat memproses file: ' . $e->getMessage());
+                    return redirect()->to('/admin/sales/actual')->with('error', 'Terjadi kesalahan saat memproses file: ' . $e->getMessage());
                 }
             } else {
                 file_put_contents($log_path, "Invalid file extension: $ext\n", FILE_APPEND);
-                return redirect()->to('/admin/sales/sales')->with('error', 'Format file tidak didukung. Harap upload file .xlsx atau .xls');
+                return redirect()->to('/admin/sales/actual')->with('error', 'Format file tidak didukung. Harap upload file .xlsx atau .xls');
             }
         } else {
             file_put_contents($log_path, "File upload failed or invalid\n", FILE_APPEND);
-            return redirect()->to('/admin/sales/sales')->with('error', 'Gagal meng-upload file. Silakan coba lagi.');
+            return redirect()->to('/admin/sales/actual')->with('error', 'Gagal meng-upload file. Silakan coba lagi.');
         }
     }
 }

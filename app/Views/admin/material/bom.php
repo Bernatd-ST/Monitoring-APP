@@ -208,17 +208,21 @@
             <form id="filterForm" method="get" action="<?= base_url('admin/material/bom') ?>" class="row g-3">
                 <div class="col-md-3">
                     <label for="filterModel" class="form-label">Model No</label>
-                    <select class="form-control select2" id="filterModel" name="model_no">
+                    <select class="form-select form-select-sm" id="filterModel" name="model_no">
                         <option value="">All</option>
                         <?php 
                         $models = [];
-                        foreach ($bom_data as $bom) {
-                            if (!in_array($bom['model_no'], $models) && !empty($bom['model_no'])) {
-                                $models[] = $bom['model_no'];
-                                $selected = (isset($filter['model_no']) && $filter['model_no'] == $bom['model_no']) ? 'selected' : '';
-                                echo '<option value="' . $bom['model_no'] . '" ' . $selected . '>' . $bom['model_no'] . '</option>';
-                            }
-                        }
+                        if(isset($bom_data)): 
+                            foreach ($bom_data as $bom): 
+                                if (!in_array($bom['model_no'], $models) && !empty($bom['model_no'])): 
+                                    $models[] = $bom['model_no'];
+                                    $selected = (isset($filter['model_no']) && $filter['model_no'] == $bom['model_no']) ? 'selected' : '';
+                        ?>
+                            <option value="<?= esc($bom['model_no']) ?>" <?= $selected ?>><?= esc($bom['model_no']) ?></option>
+                        <?php 
+                                endif;
+                            endforeach; 
+                        endif; 
                         ?>
                     </select>
                 </div>
@@ -653,7 +657,7 @@ $(document).ready(function() {
     
     // Toggle filter section
     $('#toggleFilter').on('click', function() {
-        $('#filterSection').slideToggle();
+        $('#filterSection').slideToggle(150, 'linear');
         
         // Toggle icon
         const icon = $(this).find('i');
@@ -664,6 +668,39 @@ $(document).ready(function() {
             icon.removeClass('fa-times').addClass('fa-filter');
             $(this).attr('title', 'Show Filter');
         }
+    });
+
+    // Inisialisasi Select2 untuk dropdown filter
+    $('#filterModel').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Pilih Model',
+        allowClear: true,
+        dropdownParent: $('#filterSection')
+    });
+
+    $('#filterClass').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Pilih Class',
+        allowClear: true,
+        dropdownParent: $('#filterSection')
+    });
+
+    $('#filterUpdate').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Pilih Update Value',
+        allowClear: true,
+        dropdownParent: $('#filterSection')
+    });
+
+    $('#filterPrdcode').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Pilih Product Code',
+        allowClear: true,
+        dropdownParent: $('#filterSection')
     });
     
     // View BOM - menggunakan event delegation

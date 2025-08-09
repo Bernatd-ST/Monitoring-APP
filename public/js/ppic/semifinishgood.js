@@ -6,6 +6,33 @@ $(document).ready(function() {
     $('#toggle-filters').click(function() {
         $('#filter-section').slideToggle(150, 'linear');
     });
+
+    // inisialisasi select2
+    $('#criteriaFilter').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Pilih Criteria',
+        allowClear: true,
+        dropdownParent: $('#filter-section')
+    });
+
+    $('#partNoFilter').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Pilih Part No',
+        allowClear: true,
+        dropdownParent: $('#filter-section')
+    });
+
+    $('#classFilter').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Pilih Class',
+        allowClear: true,
+        dropdownParent: $('#filter-section')
+    });
+
+    
     
     // Tambah data baru
     $('#btn-add-semifinishgood').click(function() {

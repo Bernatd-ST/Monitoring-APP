@@ -43,10 +43,28 @@
                         Dashboard
                         </a>
                     </li>
+                    
                     <li class="nav-item">
-                    <a class="nav-link <?= (uri_string() == 'admin/sales') ? 'active' : '' ?>" href="/admin/sales">
-                            <i class="fas fa-file-invoice-dollar fa-fw"></i>
-                            Sales
+                        <a class="nav-link <?= (strpos(uri_string(), 'admin/sales/sales') === 0) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#salesSubmenu" role="button" aria-expanded="<?= (strpos(uri_string(), 'admin/sales/sales') === 0) ? 'true' : 'false' ?>" aria-controls="salesSubmenu">
+                            <i class="fas fa-industry fa-fw"></i>
+                            SALES <i class="fas fa-chevron-down ms-1"></i>
+                        </a>
+                        <div class="collapse <?= (strpos(uri_string(), 'admin/sales/sales') === 0) ? 'show' : '' ?>" id="salesSubmenu">
+                            <ul class="nav flex-column ps-3">
+                                <li class="nav-item">
+                                    <a class="nav-link <?= (uri_string() == 'admin/sales/sales') ? 'active' : '' ?>" href="/admin/sales/sales">
+                                        <i class="fas fa-file-invoice-dollar fa-fw"></i>
+                                        Planning
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= (uri_string() == 'admin/sales/actual') ? 'active' : '' ?>" href="/admin/sales/actual">
+                                        <i class="fas fa-file-invoice-dollar fa-fw"></i>
+                                        Actual
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?= (strpos(uri_string(), 'admin/ppic') === 0) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#ppicSubmenu" role="button" aria-expanded="<?= (strpos(uri_string(), 'admin/ppic') === 0) ? 'true' : 'false' ?>" aria-controls="ppicSubmenu">
@@ -73,12 +91,12 @@
                                         Finish Good
                                     </a>
                                 </li>
-                                <li class="nav-item">
+                                <!-- <li class="nav-item">
                                     <a class="nav-link <?= (uri_string() == 'admin/ppic/semifinishgood') ? 'active' : '' ?>" href="/admin/ppic/semifinishgood">
                                         <i class="fas fa-box-open fa-fw"></i>
                                         Semi Finish Good
                                     </a>
-                                </li>
+                                </li> -->
                             </ul>
                         </div>
                     </li>
@@ -98,7 +116,7 @@
                                 <li class="nav-item">
                                     <a class="nav-link <?= (uri_string() == 'admin/material/material-control') ? 'active' : '' ?>" href="/admin/material/material-control">
                                         <i class="fas fa-boxes fa-fw"></i>
-                                        Material Control
+                                        Stock Material
                                     </a>
                                 </li>
                                 <li class="nav-item">

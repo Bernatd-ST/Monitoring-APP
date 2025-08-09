@@ -58,10 +58,6 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label for="periodFilter" class="form-label">Period</label>
-                <input type="month" class="form-control" id="periodFilter">
-            </div>
-            <div class="col-md-3">
                 <label for="partNoFilter" class="form-label">Part No</label>
                 <select class="form-select" id="partNoFilter">
                     <option value="">Semua Part No</option>
