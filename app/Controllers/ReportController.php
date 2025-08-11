@@ -493,27 +493,65 @@ class ReportController extends BaseController
             ->setDescription('Delivery Shortage Report generated on ' . date('Y-m-d H:i:s'));
 
         // Add title
+        log_message('debug', "[EXCEL_DEBUG] Menambahkan judul report");
         $sheet->setCellValue('A1', 'DELIVERY SHORTAGE REPORT');
-        $sheet->mergeCells('A1:' . $this->getColumnName(4 + $endDay - $startDay + 1) . '1');
+        
+        // Hitung jumlah kolom
+        $lastColumnIndex = 4 + $endDay - $startDay + 1;
+        log_message('debug', "[EXCEL_DEBUG] Menghitung jumlah kolom: 4 + {$endDay} - {$startDay} + 1 = {$lastColumnIndex}");
+        
+        // Dapatkan nama kolom terakhir
+        $lastColumnName = $this->getColumnName($lastColumnIndex);
+        log_message('debug', "[EXCEL_DEBUG] Nama kolom terakhir: {$lastColumnName}");
+        
+        // Merge cells untuk judul
+        $mergeRange = "A1:{$lastColumnName}1";
+        log_message('debug', "[EXCEL_DEBUG] Merge range untuk judul: {$mergeRange}");
+        $sheet->mergeCells($mergeRange);
+        
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        // Add period
-        $sheet->setCellValue('A2', 'Period: ' . $month . ' ' . $year);
-        $sheet->mergeCells('A2:' . $this->getColumnName(4 + $endDay - $startDay + 1) . '2');
+        // Add date filter info
+        log_message('debug', "[EXCEL_DEBUG] Menambahkan info filter tanggal");
+        $sheet->setCellValue('A2', 'Date Range: ' . date('d F Y', strtotime($startDate)) . ' - ' . date('d F Y', strtotime($endDate)));
+        
+        // Hitung range merge untuk filter tanggal
+        $dateFilterMergeRange = "A2:{$lastColumnName}2";
+        log_message('debug', "[EXCEL_DEBUG] Merge range untuk filter tanggal: {$dateFilterMergeRange}");
+        $sheet->mergeCells($dateFilterMergeRange);
+        
         $sheet->getStyle('A2')->getFont()->setBold(true);
         $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Add header row
+        log_message('debug', "[EXCEL_DEBUG] Menambahkan header row");
         $sheet->setCellValue('A4', 'Model No');
+        log_message('debug', "[EXCEL_DEBUG] Set cell A4 = 'Model No'");
+        
         $sheet->setCellValue('B4', 'Class');
+        log_message('debug', "[EXCEL_DEBUG] Set cell B4 = 'Class'");
+        
         $sheet->setCellValue('C4', '');
+        log_message('debug', "[EXCEL_DEBUG] Set cell C4 = ''");
+        
         $sheet->setCellValue('D4', 'Begin Stock');
+        log_message('debug', "[EXCEL_DEBUG] Set cell D4 = 'Begin Stock'");
 
         // Add date headers
+        log_message('debug', "[EXCEL_DEBUG] Menambahkan date headers dari hari {$startDay} sampai {$endDay}");
         $col = 5;
         for ($day = $startDay; $day <= $endDay; $day++) {
-            $sheet->setCellValue($this->getColumnName($col), $day);
+            log_message('debug', "[EXCEL_DEBUG] Memproses header untuk hari {$day}, kolom index {$col}");
+            $colName = $this->getColumnName($col);
+            log_message('debug', "[EXCEL_DEBUG] Nama kolom untuk hari {$day}: {$colName}");
+            
+            $cellCoordinate = $colName . '4';
+            log_message('debug', "[EXCEL_DEBUG] Cell coordinate untuk hari {$day}: {$cellCoordinate}");
+            
+            $sheet->setCellValue($cellCoordinate, $day);
+            log_message('debug', "[EXCEL_DEBUG] Set cell {$cellCoordinate} = {$day}");
+            
             $col++;
         }
 
@@ -556,17 +594,34 @@ class ReportController extends BaseController
             $hasNegativeStock = false;
 
             for ($day = $startDay; $day <= $endDay; $day++) {
-                // Get delivery plan from sales table
-                $dlvPlan = $this->getDlvPlan($modelNo, $classValue, $day);
+                // Konversi $day menjadi objek DateTime untuk parameter startDate dan endDate
+                $dayDate = \DateTime::createFromFormat('Y-m-d', date('Y-m-') . sprintf('%02d', $day));
+                $dayIndex = $day - 1; // Konversi ke 0-based index untuk array
+                log_message('debug', "[EXCEL_DEBUG] Memproses data untuk hari {$day}, index {$dayIndex}");
+                
+                // Get delivery plan from sales table - ambil nilai untuk hari tertentu saja
+                log_message('debug', "[EXCEL_DEBUG] Memanggil getDlvPlan untuk hari {$day}");
+                $dlvPlanArray = $this->getDlvPlan($modelNo, $classValue, $dayDate, $dayDate);
+                $dlvPlan = isset($dlvPlanArray[$dayIndex]) ? (int)$dlvPlanArray[$dayIndex] : 0;
+                log_message('debug', "[EXCEL_DEBUG] Nilai dlvPlan untuk hari {$day}: {$dlvPlan}");
 
-                // Get delivery actual from actual_sales table
-                $dlvAct = $this->getDlvAct($modelNo, $classValue, $day, $startDate, $endDate);
+                // Get delivery actual from actual_sales table - ambil nilai untuk hari tertentu saja
+                log_message('debug', "[EXCEL_DEBUG] Memanggil getDlvAct untuk hari {$day}");
+                $dlvActArray = $this->getDlvAct($modelNo, $classValue, $dayDate, $dayDate);
+                $dlvAct = isset($dlvActArray[$dayIndex]) ? (int)$dlvActArray[$dayIndex] : 0;
+                log_message('debug', "[EXCEL_DEBUG] Nilai dlvAct untuk hari {$day}: {$dlvAct}");
 
-                // Get production plan from planning_production table
-                $prdPlan = $this->getPrdPlan($modelNo, $classValue, $day);
+                // Get production plan from planning_production table - ambil nilai untuk hari tertentu saja
+                log_message('debug', "[EXCEL_DEBUG] Memanggil getPrdPlan untuk hari {$day}");
+                $prdPlanArray = $this->getPrdPlan($modelNo, $classValue, $dayDate, $dayDate);
+                $prdPlan = isset($prdPlanArray[$dayIndex]) ? (int)$prdPlanArray[$dayIndex] : 0;
+                log_message('debug', "[EXCEL_DEBUG] Nilai prdPlan untuk hari {$day}: {$prdPlan}");
 
-                // Get production actual from actual_production table
-                $prdAct = $this->getPrdAct($modelNo, $classValue, $day);
+                // Get production actual from actual_production table - ambil nilai untuk hari tertentu saja
+                log_message('debug', "[EXCEL_DEBUG] Memanggil getPrdAct untuk hari {$day}");
+                $prdActArray = $this->getPrdAct($modelNo, $classValue, $dayDate, $dayDate);
+                $prdAct = isset($prdActArray[$dayIndex]) ? (int)$prdActArray[$dayIndex] : 0;
+                log_message('debug', "[EXCEL_DEBUG] Nilai prdAct untuk hari {$day}: {$prdAct}");
 
                 // Calculate stock plan and stock actual
                 $stockPlan = $stockPlan - $dlvPlan + $prdPlan;
@@ -658,9 +713,17 @@ class ReportController extends BaseController
             $row += 6;
         }
 
-        // Auto-size columns
-        foreach (range('A', $this->getColumnName(4 + $endDay - $startDay + 1)) as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
+        // Auto-size columns - perbaikan untuk menangani kolom lebih dari Z
+        $lastColumnIndex = 4 + $endDay - $startDay + 1;
+        $lastColumnName = $this->getColumnName($lastColumnIndex);
+        
+        log_message('debug', "[EXCEL_DEBUG] Auto-sizing columns from A to {$lastColumnName} (index: {$lastColumnIndex})");
+        
+        // Gunakan pendekatan iterasi numerik daripada range() untuk menghindari masalah multi-byte
+        for ($colIndex = 1; $colIndex <= $lastColumnIndex; $colIndex++) {
+            $colName = $this->getColumnName($colIndex);
+            $sheet->getColumnDimension($colName)->setAutoSize(true);
+            log_message('debug', "[EXCEL_DEBUG] Auto-sizing column {$colName}");
         }
 
         // Create Excel file
@@ -678,9 +741,12 @@ class ReportController extends BaseController
 
     private function getColumnName($columnNumber)
     {
+        // Log untuk debugging
+        log_message('debug', "[EXCEL_DEBUG] getColumnName dipanggil dengan columnNumber: {$columnNumber}");
+        
         // Tambahkan validasi untuk menghindari error pada nilai 0 atau negatif
         if ($columnNumber <= 0) {
-            log_message('error', "Invalid column number: {$columnNumber}");
+            log_message('error', "[EXCEL_DEBUG] Invalid column number: {$columnNumber}, returning 'A'");
             return 'A'; // Default ke kolom A jika invalid
         }
         
@@ -691,9 +757,12 @@ class ReportController extends BaseController
             $modulo = ($dividend - 1) % 26;
             $columnName = chr(65 + $modulo) . $columnName;
             $dividend = floor(($dividend - $modulo) / 26);
+            
+            // Log untuk debugging
+            log_message('debug', "[EXCEL_DEBUG] Loop konversi: dividend={$dividend}, modulo={$modulo}, current columnName={$columnName}");
         }
 
-        log_message('debug', "Column number {$columnNumber} converted to column name: {$columnName}");
+        log_message('debug', "[EXCEL_DEBUG] Column number {$columnNumber} converted to column name: {$columnName}");
         return $columnName;
     }
 
