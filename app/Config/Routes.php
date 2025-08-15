@@ -17,7 +17,17 @@ $routes->post('/register/user', 'AuthController::attemptRegisterUser');
 $routes->get('/logout', 'AuthController::logout');
 
 
-$routes->get('admin/dashboard', 'Dashboard::index', ['filter' => 'auth']);
+// Redirect default dashboard to new analytics dashboard
+$routes->get('admin/dashboard', 'Admin\DashboardAnalyticsController::index', ['filter' => 'auth']);
+
+// Dashboard Analytics routes
+$routes->group('admin/dashboard-analytics', ['filter' => 'auth'], function ($routes) {
+    $routes->get('/', 'Admin\DashboardAnalyticsController::index');
+    $routes->get('model-class-options', 'Admin\DashboardAnalyticsController::getModelClassOptions');
+    $routes->get('sales-data', 'Admin\DashboardAnalyticsController::getSalesData');
+    $routes->get('production-data', 'Admin\DashboardAnalyticsController::getProductionData');
+    $routes->get('dashboard-data', 'Admin\DashboardAnalyticsController::getDashboardData');
+});
 
 // Sales planing routes
 $routes->get('admin/sales/sales', 'SalesController::index', ['filter' => 'auth']);
@@ -35,6 +45,16 @@ $routes->group('admin/report', ['filter' => 'auth'], function ($routes) {
     $routes->get('delivery-shortage/export', 'ReportController::exportDeliveryShortage');
     $routes->get('delivery-shortage/models', 'ReportController::getAvailableModels');
     $routes->get('delivery-shortage/classes', 'ReportController::getAvailableClasses');
+});
+
+// Material Shortage Report routes
+$routes->group('material-shortage', ['filter' => 'auth'], function ($routes) {
+    $routes->get('/', 'MaterialShortageController::index');
+    $routes->post('data', 'MaterialShortageController::getMaterialShortageData');
+    $routes->post('export', 'MaterialShortageController::exportMaterialShortage');
+    $routes->get('models', 'MaterialShortageController::getAvailableModels');
+    $routes->get('h-classes', 'MaterialShortageController::getAvailableHClasses');
+    $routes->get('classes', 'MaterialShortageController::getAvailableClasses');
 });
 
 // Material Control routes

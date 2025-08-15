@@ -1224,41 +1224,40 @@ class PPICController extends BaseController
                 
                 // Definisikan mapping kolom Excel ke tanggal
                 $dayColumnMap = [
-                    1 => 'K',  // Tanggal 1 = Kolom F
-                    2 => 'L',  // Tanggal 2 = Kolom G
-                    3 => 'M',  // Tanggal 3 = Kolom H
-                    4 => 'N',  // Tanggal 4 = Kolom I
-                    5 => 'O',  // Tanggal 5 = Kolom J
-                    6 => 'P',  // Tanggal 6 = Kolom K
-                    7 => 'Q',  // Tanggal 7 = Kolom L
-                    8 => 'R',  // Tanggal 8 = Kolom M
-                    9 => 'S',  // Tanggal 9 = Kolom N
-                    10 => 'T', // Tanggal 10 = Kolom O
-                    11 => 'U', // Tanggal 11 = Kolom P
-                    12 => 'V', // Tanggal 12 = Kolom Q
-                    13 => 'W', // Tanggal 13 = Kolom R
-                    14 => 'X', // Tanggal 14 = Kolom S
-                    15 => 'Y', // Tanggal 15 = Kolom T
-                    16 => 'Z', // Tanggal 16 = Kolom U
-                    17 => 'AA', // Tanggal 17 = Kolom V
-                    18 => 'AB', // Tanggal 18 = Kolom W
-                    19 => 'AC', // Tanggal 19 = Kolom X
-                    20 => 'AD', // Tanggal 20 = Kolom Y
-                    21 => 'AE', // Tanggal 21 = Kolom Z
-                    22 => 'AF', // Tanggal 22 = Kolom AA
-                    23 => 'AG', // Tanggal 23 = Kolom AB
-                    24 => 'AH', // Tanggal 24 = Kolom AC
-                    25 => 'AI', // Tanggal 25 = Kolom AD
-                    26 => 'AJ', // Tanggal 26 = Kolom AE
-                    27 => 'AK', // Tanggal 27 = Kolom AF
-                    28 => 'AL', // Tanggal 28 = Kolom AG
-                    29 => 'AM', // Tanggal 29 = Kolom AH
-                    30 => 'AN', // Tanggal 30 = Kolom AI
-                    31 => 'AP', // Tanggal 31 = Kolom AJ
+                    1 => 'F',  // Tanggal 1 = Kolom F
+                    2 => 'G',  // Tanggal 2 = Kolom G
+                    3 => 'H',  // Tanggal 3 = Kolom H
+                    4 => 'I',  // Tanggal 4 = Kolom I
+                    5 => 'J',  // Tanggal 5 = Kolom J
+                    6 => 'K',  // Tanggal 6 = Kolom K
+                    7 => 'L',  // Tanggal 7 = Kolom L
+                    8 => 'M',  // Tanggal 8 = Kolom M
+                    9 => 'N',  // Tanggal 9 = Kolom N
+                    10 => 'O', // Tanggal 10 = Kolom O
+                    11 => 'P', // Tanggal 11 = Kolom P
+                    12 => 'Q', // Tanggal 12 = Kolom Q
+                    13 => 'R', // Tanggal 13 = Kolom R
+                    14 => 'S', // Tanggal 14 = Kolom S
+                    15 => 'T', // Tanggal 15 = Kolom T
+                    16 => 'U', // Tanggal 16 = Kolom U
+                    17 => 'V', // Tanggal 17 = Kolom V
+                    18 => 'W', // Tanggal 18 = Kolom W
+                    19 => 'X', // Tanggal 19 = Kolom X
+                    20 => 'Y', // Tanggal 20 = Kolom Y
+                    21 => 'Z', // Tanggal 21 = Kolom Z
+                    22 => 'AA', // Tanggal 22 = Kolom AA
+                    23 => 'AB', // Tanggal 23 = Kolom AB
+                    24 => 'AC', // Tanggal 24 = Kolom AC
+                    25 => 'AD', // Tanggal 25 = Kolom AD
+                    26 => 'AE', // Tanggal 26 = Kolom AE
+                    27 => 'AF', // Tanggal 27 = Kolom AF
+                    28 => 'AG', // Tanggal 28 = Kolom AG
+                    29 => 'AH', // Tanggal 29 = Kolom AH
+                    30 => 'AI', // Tanggal 30 = Kolom AI
                 ];
                 
                 // Proses data untuk setiap hari
-                for ($day = 1; $day <= 31; $day++) {
+                for ($day = 1; $day <= 30; $day++) {
                     // Ambil kolom yang sesuai dari mapping
                     $dayCol = $dayColumnMap[$day] ?? null;
                     
@@ -1772,7 +1771,7 @@ class PPICController extends BaseController
                 $total = 0;
                 for ($i = 1; $i <= 31; $i++) {
                     // Default value 0 jika tidak ada data atau data bukan numeric
-                    $colIndex = $i + 2; // Kolom D = index 3 (day_1), dst.
+                    $colIndex = $i + 3; // Kolom E = index 4 (day_1), dst.
                     
                     // Sanitasi dan validasi nilai
                     if (isset($row[$colIndex]) && (is_numeric($row[$colIndex]) || is_numeric(str_replace(',', '.', $row[$colIndex])))) {

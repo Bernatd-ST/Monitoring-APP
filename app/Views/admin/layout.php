@@ -19,12 +19,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="/css/Dashboard/dashboard.css">
     <link rel="stylesheet" href="/css/ppic/style.css">
+    <link rel="stylesheet" href="/css/sidebar-custom.css">
     
 </head>
 <body>
 
 <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
     <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#">Monitoring App</a>
+    <button class="navbar-toggler d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
     <div class="navbar-nav">
         <div class="nav-item text-nowrap">
             <a class="nav-link px-3" href="/logout">Sign out</a>
@@ -34,7 +38,7 @@
 
 <div class="container-fluid">
     <div class="row">
-        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
             <div class="position-sticky pt-3">
                 <ul class="nav flex-column">
                     <li class="nav-item">
@@ -141,6 +145,12 @@
                                         Delivery Shortage
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= (uri_string() == 'material-shortage') ? 'active' : '' ?>" href="/material-shortage">
+                                        <i class="fas fa-boxes fa-fw"></i>
+                                        Material Shortage
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </li>
@@ -148,8 +158,13 @@
             </div>
         </nav>
 
+        <!-- Sidebar Toggle Button -->
+        <div class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-left"></i>
+        </div>
+        
         <!-- Main Content -->
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content-wrapper">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2"><?= esc($title ?? 'Page'); ?></h1>
                 
@@ -231,5 +246,66 @@ $(document).ready(function() {
 
 <!-- Custom scripts section -->
 <?= $this->renderSection('scripts') ?>
+<!-- Custom Sidebar Script -->
+<script>
+$(document).ready(function() {
+    // Sidebar toggle functionality
+    $('#sidebarToggle').on('click', function() {
+        $('#sidebarMenu').toggleClass('collapsed');
+        
+        // Change icon direction
+        if ($('#sidebarMenu').hasClass('collapsed')) {
+            $(this).find('i').removeClass('fa-chevron-left').addClass('fa-chevron-right');
+        } else {
+            $(this).find('i').removeClass('fa-chevron-right').addClass('fa-chevron-left');
+        }
+    });
+    
+    // Add data-title attributes for tooltips when collapsed
+    $('.nav-item').each(function() {
+        var linkText = $(this).find('> .nav-link').text().trim();
+        $(this).attr('data-title', linkText);
+    });
+    
+    // Ensure submenu opens on parent click in mobile view
+    $('.nav-link[data-bs-toggle="collapse"]').on('click', function(e) {
+        if (window.innerWidth < 768) {
+            e.preventDefault();
+            $($(this).data('bs-target')).collapse('toggle');
+        }
+    });
+    
+    // Add span around text in nav links for better control
+    $('.nav-link').each(function() {
+        var $link = $(this);
+        var html = $link.html();
+        var iconHtml = '';
+        
+        // Check if there's already an icon
+        if (html.indexOf('<i class="fas') !== -1) {
+            // Extract the icon part
+            var iconMatch = html.match(/<i class="fas[^>]*><\/i>/g);
+            if (iconMatch) {
+                iconHtml = iconMatch[0];
+                html = html.replace(iconHtml, '');
+            }
+        }
+        
+        // Check for chevron icon separately
+        var chevronHtml = '';
+        if (html.indexOf('<i class="fas fa-chevron-down') !== -1) {
+            var chevronMatch = html.match(/<i class="fas fa-chevron-down[^>]*><\/i>/g);
+            if (chevronMatch) {
+                chevronHtml = chevronMatch[0];
+                html = html.replace(chevronHtml, '');
+            }
+        }
+        
+        // Wrap the remaining text in a span
+        html = html.trim();
+        $link.html(iconHtml + ' <span>' + html + '</span> ' + chevronHtml);
+    });
+});
+</script>
 </body>
 </html>

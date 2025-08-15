@@ -369,18 +369,17 @@ class ReportController extends BaseController
         // Debug log
         log_message('debug', "getDlvAct called with modelNo: {$modelNo}, class: {$class}, startDate: {$startDate->format('Y-m-d')}, endDate: {$endDate->format('Y-m-d')}");
         
+        // Mengabaikan bulan dan tahun, hanya mengambil data berdasarkan tanggal (day)
         $query = $db->table('actual_sales')
             ->select('shp_date, act_qty')
             ->where('model_no', $modelNo)
             ->where('class', (int)$class)
-            ->where('shp_date >=', $startDate->format('Y-m-d'))
-            ->where('shp_date <=', $endDate->format('Y-m-d'))
             ->get();
         
         $result = $query->getResultArray();
         
         // Debug log
-        log_message('debug', "getDlvAct found " . count($result) . " records");
+        log_message('debug', "getDlvAct found " . count($result) . " records total");
         
         $dlvAct = array_fill(0, 31, 0);
         foreach ($result as $row) {
@@ -388,8 +387,14 @@ class ReportController extends BaseController
                 $day = intval(date('j', strtotime($row['shp_date'])));
                 $dayIndex = $day - 1; // Konversi ke 0-based index
                 if ($dayIndex >= 0 && $dayIndex < 31) {
-                    $dlvAct[$dayIndex] = (int)$row['act_qty'];
-                    log_message('debug', "getDlvAct: Added {$row['act_qty']} to day {$day} (index {$dayIndex})");
+                    // Jika sudah ada nilai untuk hari yang sama, tambahkan nilai baru
+                    if (isset($dlvAct[$dayIndex]) && $dlvAct[$dayIndex] > 0) {
+                        log_message('debug', "getDlvAct: Day {$day} already has value {$dlvAct[$dayIndex]}, adding {$row['act_qty']}");
+                        $dlvAct[$dayIndex] += (int)$row['act_qty'];
+                    } else {
+                        $dlvAct[$dayIndex] = (int)$row['act_qty'];
+                    }
+                    log_message('debug', "getDlvAct: Added {$row['act_qty']} to day {$day} (index {$dayIndex}), total now: {$dlvAct[$dayIndex]}");
                 }
             } catch (\Exception $e) {
                 log_message('error', "Error processing date in getDlvAct: " . $e->getMessage());
