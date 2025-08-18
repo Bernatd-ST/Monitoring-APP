@@ -14,9 +14,9 @@ class MaterialShortageModelFixed extends Model
         $this->db = \Config\Database::connect();
     }
 
-    public function getMaterialShortageData($startDate, $endDate, $modelNo = null, $hClass = null, $class = null, $minusOnly = false)
+    public function getMaterialShortageData($startDate, $endDate, $partNo = null, $hClass = null, $class = null, $minusOnly = false)
     {
-        log_message('debug', "MATERIAL_SHORTAGE_MODEL - Getting data with params: startDate={$startDate}, endDate={$endDate}, modelNo={$modelNo}, hClass={$hClass}, class={$class}, minusOnly=" . ($minusOnly ? 'true' : 'false'));
+        log_message('debug', "MATERIAL_SHORTAGE_MODEL - Getting data with params: startDate={$startDate}, endDate={$endDate}, partNo={$partNo}, hClass={$hClass}, class={$class}, minusOnly=" . ($minusOnly ? 'true' : 'false'));
 
         // Konversi tanggal ke format database
         $startDate = date('Y-m-d', strtotime($startDate));
@@ -24,14 +24,10 @@ class MaterialShortageModelFixed extends Model
 
         log_message('debug', "MATERIAL_SHORTAGE_MODEL - Converted dates: startDate={$startDate}, endDate={$endDate}");
 
-        // Step 1: Ambil semua model_no dari planning_production (atau filter berdasarkan modelNo jika ada)
+        // Step 1: Ambil semua model_no dari planning_production
         $modelQuery = $this->db->table('planning_production')
             ->select('model_no, class')
             ->distinct();
-
-        if ($modelNo) {
-            $modelQuery->where('model_no', $modelNo);
-        }
 
         $planningData = $modelQuery->get()->getResultArray();
         log_message('debug', "MATERIAL_SHORTAGE_MODEL - Found " . count($planningData) . " unique model_no combinations");
@@ -69,21 +65,26 @@ class MaterialShortageModelFixed extends Model
 
             // Step 3: Untuk setiap part_no, hitung data harian
             foreach ($bomItems as $bomItem) {
-                $partNo = $bomItem['part_no'];
+                $currentPartNo = $bomItem['part_no'];
                 $partHClass = $bomItem['h_class'];
                 $partClass = $bomItem['class'];
                 $qtyAssy = (float)$bomItem['qty_assy'];
+                
+                // Filter berdasarkan part_no jika parameter diberikan
+                if ($partNo && $currentPartNo != $partNo) {
+                    continue; // Skip jika tidak sesuai dengan filter part_no
+                }
 
-                log_message('debug', "MATERIAL_SHORTAGE_MODEL - Processing part_no: {$partNo}, h_class: {$partHClass}, class: {$partClass}, qty_assy: {$qtyAssy}");
+                log_message('debug', "MATERIAL_SHORTAGE_MODEL - Processing part_no: {$currentPartNo}, h_class: {$partHClass}, class: {$partClass}, qty_assy: {$qtyAssy}");
 
                 // Step 3.1: Ambil begin_stock dari stock_material
-                $beginStock = $this->getBeginStock($partNo, $partClass);
-                log_message('debug', "MATERIAL_SHORTAGE_MODEL - Begin stock for part_no {$partNo}: {$beginStock}");
+                $beginStock = $this->getBeginStock($currentPartNo, $partClass);
+                log_message('debug', "MATERIAL_SHORTAGE_MODEL - Begin stock for part_no {$currentPartNo}: {$beginStock}");
 
                 // Step 3.2: Hitung data harian dengan rumus yang benar (menggunakan logika hardcode test)
-                $dailyData = $this->calculateDailyDataFixed($currentModelNo, $modelClass, $partNo, $partClass, $qtyAssy, $startDate, $endDate);
+                $dailyData = $this->calculateDailyDataFixed($currentModelNo, $modelClass, $currentPartNo, $partClass, $qtyAssy, $startDate, $endDate);
                 
-                log_message('debug', "MATERIAL_SHORTAGE_MODEL - Daily data calculated for {$partNo}: " . json_encode($dailyData));
+                log_message('debug', "MATERIAL_SHORTAGE_MODEL - Daily data calculated for {$currentPartNo}: " . json_encode($dailyData));
 
                 // Step 3.3: Hitung stock plan dan stock act secara kumulatif
                 $stockPlan = $beginStock;
@@ -114,7 +115,7 @@ class MaterialShortageModelFixed extends Model
                 $item = [
                     'model_no' => $currentModelNo,
                     'h_class' => $partHClass,
-                    'part_no' => $partNo,
+                    'part_no' => $currentPartNo,
                     'description' => $bomItem['description'],
                     'class' => $partClass,
                     'begin_stock' => $beginStock,
@@ -245,6 +246,38 @@ class MaterialShortageModelFixed extends Model
         return $dailyData;
     }
 
+    public function getAvailableParts($search = null, $page = 1, $limit = 20)
+    {
+        $offset = ($page - 1) * $limit;
+        
+        // Base query untuk mendapatkan part_no yang unik
+        $query = $this->db->table('master_bom')
+            ->select('part_no')
+            ->distinct();
+        
+        // Tambahkan kondisi pencarian jika ada
+        if ($search) {
+            $query->like('part_no', $search);
+        }
+        
+        // Hitung total record untuk pagination
+        $countQuery = clone $query;
+        $totalCount = $countQuery->countAllResults();
+        
+        // Ambil data dengan limit dan offset
+        $parts = $query->orderBy('part_no', 'ASC')
+            ->limit($limit, $offset)
+            ->get()
+            ->getResultArray();
+        
+        log_message('debug', "MATERIAL_SHORTAGE_MODEL - Found {$totalCount} parts matching search '{$search}', returning page {$page} with {$limit} items");
+        
+        return [
+            'parts' => $parts,
+            'total_count' => $totalCount
+        ];
+    }
+    
     public function getAvailableModels()
     {
         $models = $this->db->table('planning_production')

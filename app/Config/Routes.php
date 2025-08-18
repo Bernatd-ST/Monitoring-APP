@@ -36,6 +36,11 @@ $routes->post('admin/sales/upload', 'SalesController::upload', ['filter' => 'aut
 // Sales actual routes
 $routes->get('admin/sales/actual', 'SalesActualController::index', ['filter' => 'auth']);
 $routes->post('admin/sales/actual/upload', 'SalesActualController::upload', ['filter' => 'auth']);
+$routes->post('admin/sales/actual/add', 'SalesActualController::add', ['filter' => 'auth']);
+$routes->get('admin/sales/actual/get/(:num)', 'SalesActualController::get/$1', ['filter' => 'auth']);
+$routes->post('admin/sales/actual/update', 'SalesActualController::update', ['filter' => 'auth']);
+$routes->post('admin/sales/actual/delete/(:num)', 'SalesActualController::delete/$1', ['filter' => 'auth']);
+$routes->get('admin/sales/actual/export', 'SalesActualController::export', ['filter' => 'auth']);
 
 // Report routes
 $routes->group('admin/report', ['filter' => 'auth'], function ($routes) {
@@ -53,6 +58,7 @@ $routes->group('material-shortage', ['filter' => 'auth'], function ($routes) {
     $routes->post('data', 'MaterialShortageController::getMaterialShortageData');
     $routes->post('export', 'MaterialShortageController::exportMaterialShortage');
     $routes->get('models', 'MaterialShortageController::getAvailableModels');
+    $routes->get('parts', 'MaterialShortageController::getAvailableParts');
     $routes->get('h-classes', 'MaterialShortageController::getAvailableHClasses');
     $routes->get('classes', 'MaterialShortageController::getAvailableClasses');
 });

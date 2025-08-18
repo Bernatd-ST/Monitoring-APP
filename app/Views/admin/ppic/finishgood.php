@@ -98,7 +98,7 @@
                         <th>Description</th>
                         <th>Part No</th>
                         <th>Class</th>
-                        <th>Begining Balance</th>
+                        <th>Stock Begining</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>

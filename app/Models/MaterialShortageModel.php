@@ -309,20 +309,27 @@ class MaterialShortageModel extends Model
             $invNo = '';
             
             try {
+                // Ambil hari dari tanggal saat ini (1-31)
+                $currentDay = date('j', strtotime($dateKey));
+                
+                // Query shipment_schedule berdasarkan item_no, class, dan hari dari eta_meina
                 $shipmentData = $this->db->table('shipment_schedule')
+                    ->select('shipment_schedule.*, DAY(eta_meina) as eta_day')
                     ->where('item_no', $partNo)
                     ->where('class', $partClass)
-                    ->where('eta_meina', $dateKey)
+                    ->having('eta_day', $currentDay) // Filter berdasarkan hari saja
                     ->get()
                     ->getRowArray();
                 
                 if ($shipmentData) {
                     $eta = (float)$shipmentData['sch_qty'];
                     $invNo = $shipmentData['inv_no'];
-                    log_message('debug', "MATERIAL_SHORTAGE_MODEL - Found shipment for {$dateKey}: ETA={$eta}, INV={$invNo}");
+                    log_message('debug', "MATERIAL_SHORTAGE_MODEL - Found shipment for day {$currentDay} (date {$dateKey}): ETA={$eta}, INV={$invNo}");
+                } else {
+                    log_message('debug', "MATERIAL_SHORTAGE_MODEL - No shipment found for day {$currentDay} (date {$dateKey})");
                 }
             } catch (\Exception $e) {
-                log_message('debug', "MATERIAL_SHORTAGE_MODEL - Shipment query error for {$dateKey}: " . $e->getMessage());
+                log_message('error', "MATERIAL_SHORTAGE_MODEL - Shipment query error for {$dateKey}: " . $e->getMessage());
             }
 
             $dailyData[$dateKey] = [

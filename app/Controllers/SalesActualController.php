@@ -6,9 +6,18 @@ use App\Controllers\BaseController;
 use App\Models\ActualSalesModel;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx as WriterXlsx;
 
 class SalesActualController extends BaseController
 {
+    protected $actualSalesModel;
+    
+    public function __construct()
+    {
+        $this->actualSalesModel = new ActualSalesModel();
+    }
+    
     public function index()
     {
         $actualSalesModel = new ActualSalesModel();
@@ -116,17 +125,12 @@ class SalesActualController extends BaseController
     //         }
     //     } else {
     //         return redirect()->to('/admin/sales/sales')->with('error', 'Gagal meng-upload file. Silakan coba lagi.');
-    //     }
-    // }
 
     public function upload()
     {
         $file = $this->request->getFile('excel_file');
-        $actualSalesModel = new ActualSalesModel();
-        
-        // Buat log file untuk debugging
-        $log_path = WRITEPATH . 'logs/actual_sales_import_debug.log';
-        file_put_contents($log_path, "=== Actual Sales Excel Import Debug Log ===\n", FILE_APPEND);
+        $log_path = WRITEPATH . 'logs/actual_sales_import_' . date('Y-m-d_H-i-s') . '.log';
+        file_put_contents($log_path, "Starting import process at " . date('Y-m-d H:i:s') . "\n");
 
         // 1. Validasi File
         if ($file && $file->isValid() && !$file->hasMoved()) {
@@ -247,5 +251,226 @@ class SalesActualController extends BaseController
             file_put_contents($log_path, "File upload failed or invalid\n", FILE_APPEND);
             return redirect()->to('/admin/sales/actual')->with('error', 'Gagal meng-upload file. Silakan coba lagi.');
         }
+    }
+    
+    public function add()
+    {
+        if ($this->request->isAJAX()) {
+            $validation = \Config\Services::validation();
+            
+            $rules = [
+                'model_no' => 'required',
+                'class' => 'required',
+                'sch_qty' => 'required|numeric',
+                'act_qty' => 'required|numeric',
+                'shp_date' => 'required|valid_date'
+            ];
+            
+            $validation->setRules($rules);
+            
+            if (!$validation->withRequest($this->request)->run()) {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => $validation->getErrors()
+                ]);
+            }
+            
+            $data = [
+                'model_no' => $this->request->getPost('model_no'),
+                'class' => $this->request->getPost('class'),
+                'sch_qty' => $this->request->getPost('sch_qty'),
+                'act_qty' => $this->request->getPost('act_qty'),
+                'prd_cd' => $this->request->getPost('prd_cd'),
+                'content' => $this->request->getPost('content'),
+                'shp_date' => $this->request->getPost('shp_date')
+            ];
+            
+            if ($this->actualSalesModel->insert($data)) {
+                return $this->response->setJSON([
+                    'status' => true,
+                    'message' => 'Data berhasil ditambahkan'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'Gagal menambahkan data'
+                ]);
+            }
+        } else {
+            return $this->response->setStatusCode(403)->setJSON([
+                'status' => false,
+                'message' => 'Akses ditolak'
+            ]);
+        }
+    }
+    
+    public function get($id = null)
+    {
+        if ($this->request->isAJAX()) {
+            if ($id === null) {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'ID tidak ditemukan'
+                ]);
+            }
+            
+            $data = $this->actualSalesModel->find($id);
+            
+            if ($data) {
+                return $this->response->setJSON([
+                    'status' => true,
+                    'data' => $data
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'Data tidak ditemukan'
+                ]);
+            }
+        } else {
+            return $this->response->setStatusCode(403)->setJSON([
+                'status' => false,
+                'message' => 'Akses ditolak'
+            ]);
+        }
+    }
+    
+    public function update()
+    {
+        if ($this->request->isAJAX()) {
+            $validation = \Config\Services::validation();
+            
+            $rules = [
+                'id' => 'required',
+                'model_no' => 'required',
+                'class' => 'required',
+                'sch_qty' => 'required|numeric',
+                'act_qty' => 'required|numeric',
+                'shp_date' => 'required|valid_date'
+            ];
+            
+            $validation->setRules($rules);
+            
+            if (!$validation->withRequest($this->request)->run()) {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => $validation->getErrors()
+                ]);
+            }
+            
+            $id = $this->request->getPost('id');
+            $data = [
+                'model_no' => $this->request->getPost('model_no'),
+                'class' => $this->request->getPost('class'),
+                'sch_qty' => $this->request->getPost('sch_qty'),
+                'act_qty' => $this->request->getPost('act_qty'),
+                'prd_cd' => $this->request->getPost('prd_cd'),
+                'content' => $this->request->getPost('content'),
+                'shp_date' => $this->request->getPost('shp_date')
+            ];
+            
+            if ($this->actualSalesModel->update($id, $data)) {
+                return $this->response->setJSON([
+                    'status' => true,
+                    'message' => 'Data berhasil diperbarui'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'Gagal memperbarui data'
+                ]);
+            }
+        } else {
+            return $this->response->setStatusCode(403)->setJSON([
+                'status' => false,
+                'message' => 'Akses ditolak'
+            ]);
+        }
+    }
+    
+    public function delete($id = null)
+    {
+        if ($this->request->isAJAX()) {
+            if ($id === null) {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'ID tidak ditemukan'
+                ]);
+            }
+            
+            if ($this->actualSalesModel->delete($id)) {
+                return $this->response->setJSON([
+                    'status' => true,
+                    'message' => 'Data berhasil dihapus'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'Gagal menghapus data'
+                ]);
+            }
+        } else {
+            return $this->response->setStatusCode(403)->setJSON([
+                'status' => false,
+                'message' => 'Akses ditolak'
+            ]);
+        }
+    }
+    
+    public function export()
+    {
+        // Ambil semua data actual sales
+        $data = $this->actualSalesModel->findAll();
+        
+        // Buat spreadsheet baru
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Set judul kolom
+        $sheet->setCellValue('A1', 'Model No');
+        $sheet->setCellValue('B1', 'Class');
+        $sheet->setCellValue('C1', 'Schedule Qty');
+        $sheet->setCellValue('D1', 'Actual Qty');
+        $sheet->setCellValue('E1', 'Product Code');
+        $sheet->setCellValue('F1', 'Content');
+        $sheet->setCellValue('G1', 'Ship Date');
+        
+        // Style header
+        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:G1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFCCCCCC');
+        
+        // Isi data
+        $row = 2;
+        foreach ($data as $item) {
+            $sheet->setCellValue('A' . $row, $item['model_no']);
+            $sheet->setCellValue('B' . $row, $item['class']);
+            $sheet->setCellValue('C' . $row, $item['sch_qty']);
+            $sheet->setCellValue('D' . $row, $item['act_qty']);
+            $sheet->setCellValue('E' . $row, $item['prd_cd']);
+            $sheet->setCellValue('F' . $row, $item['content']);
+            
+            // Format tanggal
+            if (!empty($item['shp_date'])) {
+                $date = date_create($item['shp_date']);
+                $sheet->setCellValue('G' . $row, date_format($date, 'd-M-Y'));
+            }
+            
+            $row++;
+        }
+        
+        // Auto size kolom
+        foreach (range('A', 'G') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        
+        // Set header untuk download
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="Actual_Sales_Export_' . date('Y-m-d') . '.xlsx"');
+        header('Cache-Control: max-age=0');
+        
+        // Tulis ke output dan keluar
+        $writer = new WriterXlsx($spreadsheet);
+        $writer->save('php://output');
+        exit();
     }
 }

@@ -42,9 +42,9 @@
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <label for="model-no" class="form-label fw-bold">Model No</label>
-                                <select class="form-control select2-dropdown" id="model-no" data-placeholder="All Models" style="height: 38px; width: 100%;">
-                                    <option value="">All Models</option>
+                                <label for="part-no" class="form-label fw-bold">Part No</label>
+                                <select class="form-control select2-dropdown" id="part-no" data-placeholder="All Parts" style="height: 38px; width: 100%;">
+                                    <option value="">All Parts</option>
                                 </select>
                             </div>
                             <!-- H Class filter commented out as requested -->
@@ -87,16 +87,11 @@
                     </div>
 
                     <!-- Report Table -->
-                    <div id="reportTableContainer" class="table-responsive shadow-sm rounded">
-                        <table id="material-shortage-table" class="table table-bordered">
-                            <thead>
-                                <tr id="headerRow" class="bg-light">
-                                    <!-- Headers will be added dynamically -->
-                                </tr>
-                            </thead>
-                            <tbody id="reportBody">
-                                <!-- Report data will be added dynamically -->
-                            </tbody>
+                    <div class="card-body table-responsive p-0" style="max-height: 70vh;">
+                    <div class="table-container">
+                        <table id="material-shortage-table" class="table table-bordered table-hover">
+                            <thead style="background: linear-gradient(to bottom, rgba(220, 53, 69, 0.85), rgba(220, 53, 69, 0.65)) !important;"></thead>
+                            <tbody></tbody>
                         </table>
                     </div>
 
@@ -170,11 +165,12 @@
         margin-bottom: 1rem;
         color: #4a5568;
         border-collapse: collapse;
-        font-size: 0.85rem;
+        font-size: 0.88rem;
+        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         background-color: white;
         border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
     }
     
     #material-shortage-table tr.bg-light {
@@ -182,26 +178,28 @@
     }
     
     #material-shortage-table th {
-        vertical-align: bottom;
+        background: linear-gradient(to bottom, rgba(220, 53, 69, 0.85), rgba(220, 53, 69, 0.65));
+        color: white;
+        padding: 0.7rem 0.75rem;
+        font-weight: 500;
+        font-size: 0.82rem;
         text-align: center;
-        padding: 0.85rem 0.75rem;
-        border: 1px solid #e2e8f0;
-        font-weight: 600;
-        color: #2d3748;
-        white-space: nowrap;
-        background: linear-gradient(to bottom, #f7fafc, #edf2f7) !important;
+        vertical-align: middle;
+        border: 1px solid rgba(220, 53, 69, 0.5);
         position: sticky;
         top: 0;
         z-index: 10;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        box-shadow: 0 1px 5px rgba(0,0,0,0.12);
+        transition: all 0.2s ease;
         text-transform: uppercase;
-        font-size: 0.8rem;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.6px;
+        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        white-space: nowrap;
     }
     
     /* Add subtle hover effect to headers */
     #material-shortage-table th:hover {
-        background: linear-gradient(to bottom,#edf2f7, #e2e8f0) !important;
+        background: linear-gradient(to bottom, rgba(220, 53, 69, 0.9), rgba(220, 53, 69, 0.7)) !important;
         cursor: default;
     }
     
@@ -217,13 +215,58 @@
         border-top-right-radius: 0.25rem;
     }
     
+    /* Fixed column widths for specific columns */
+    #material-shortage-table th.h-class-cell,
+    #material-shortage-table td.h-class-cell {
+        min-width: 100px;
+        width: 100px;
+    }
+    
+    #material-shortage-table th.label-cell,
+    #material-shortage-table td.label-cell {
+        min-width: 180px;
+        width: 180px;
+    }
+    
+    #material-shortage-table th.stock-cell,
+    #material-shortage-table td.stock-cell {
+        min-width: 120px;
+        width: 120px;
+    }
+    
+    #material-shortage-table th.part-cell,
+    #material-shortage-table td.part-cell {
+        min-width: 150px;
+        width: 150px;
+    }
+    
+    #material-shortage-table th.desc-cell,
+    #material-shortage-table td.desc-cell {
+        min-width: 200px;
+        width: 200px;
+    }
+    
+    #material-shortage-table th.class-cell,
+    #material-shortage-table td.class-cell {
+        min-width: 100px;
+        width: 100px;
+    }
+    
+    #material-shortage-table th.model-cell,
+    #material-shortage-table td.model-cell {
+        min-width: 150px;
+        width: 150px;
+    }
+    
     #material-shortage-table td {
-        padding: 0.65rem 0.75rem;
-        border: 1px solid #e2e8f0;
+        padding: 0.7rem 0.75rem;
+        border: 1px solid rgba(0, 0, 0, 0.08);
         vertical-align: middle;
         text-align: center;
         transition: all 0.2s ease;
         background-color: white;
+        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        white-space: nowrap;
     }
     
     #material-shortage-table tbody tr:hover td {
@@ -232,11 +275,16 @@
     
     /* Zebra striping for better readability */
     #material-shortage-table tbody tr:nth-child(even) td:not([class*="-cell"]) {
-        background-color: #fafafa;
+        background-color: rgba(0, 0, 0, 0.02);
     }
     
     #material-shortage-table tbody tr:nth-child(even):hover td:not([class*="-cell"]) {
-        background-color: #f8fafc;
+        background-color: rgba(13, 110, 253, 0.03);
+    }
+    
+    /* Improved hover effect for all rows */
+    #material-shortage-table tbody tr:hover td {
+        background-color: rgba(13, 110, 253, 0.05);
     }
     
     /* Group header styling */
@@ -345,14 +393,14 @@
     
     /* Negative value styling */
     .negative-value {
-        background-color: #fee2e2 !important;
-        color: #dc2626;
-        font-weight: 600;
+        color: rgba(220, 53, 69, 0.9);
+        font-weight: 500;
         position: relative;
+        background-color: rgba(220, 53, 69, 0.05);
     }
     
     .negative-value:hover {
-        background-color: #fecaca !important;
+        background-color: rgba(220, 53, 69, 0.1) !important;
     }
     
     /* Add subtle indicator for negative values */
@@ -499,6 +547,16 @@ $(function() {
             return $(this).data('placeholder');
         }
     });
+    
+    // Check if filter was previously visible and restore state
+    if (localStorage.getItem('material_shortage_filter_visible') === 'true') {
+        const $filterContainer = $('.filter-container');
+        const $icon = $('#toggle-filter').find('i');
+        
+        $filterContainer.show();
+        $('#toggle-filter').removeClass('btn-primary').addClass('btn-danger active');
+        $icon.removeClass('fa-filter').addClass('fa-times');
+    }
 
     // Inisialisasi Date Range Picker dengan default 30 hari
     var start = moment();
@@ -540,24 +598,34 @@ $(function() {
 
     cb(start, end);
     
-    // Toggle filter section
+    // Toggle filter section with color change animation
     $('#toggle-filter').on('click', function() {
         const $filterContainer = $('.filter-container');
         const $icon = $(this).find('i');
+        const $button = $(this);
+        
+        // Add transition for smoother color change
+        $button.css('transition', 'all 0.3s ease');
         
         $filterContainer.slideToggle(300, function() {
             if ($filterContainer.is(':visible')) {
-                $('#toggle-filter').removeClass('btn-primary').addClass('btn-danger active');
+                // Change to danger color when filter is visible
+                $button.removeClass('btn-primary').addClass('btn-danger active');
                 $icon.removeClass('fa-filter').addClass('fa-times');
+                // Store filter state in local storage
+                localStorage.setItem('material_shortage_filter_visible', 'true');
             } else {
-                $('#toggle-filter').removeClass('btn-danger active').addClass('btn-primary');
+                // Change back to primary color when filter is hidden
+                $button.removeClass('btn-danger active').addClass('btn-primary');
                 $icon.removeClass('fa-times').addClass('fa-filter');
+                // Store filter state in local storage
+                localStorage.setItem('material_shortage_filter_visible', 'false');
             }
         });
     });
 
-    // Load model_no options
-    loadModelOptions();
+    // Load part_no options
+    loadPartOptions();
     loadHClassOptions();
     loadClassOptions();
 
@@ -576,31 +644,56 @@ $(function() {
     // loadMaterialShortageData();
 });
 
-function loadModelOptions() {
-    $.ajax({
-        url: '<?= base_url('material-shortage/models') ?>',
-        type: 'GET',
-        dataType: 'json',
-        beforeSend: function() {
-            $('#model-no').prop('disabled', true);
-        },
-        success: function(response) {
-            if (response.success) {
-                var options = '<option value="">All Models</option>';
-                $.each(response.models, function(index, model) {
-                    options += '<option value="' + model.model_no + '">' + model.model_no + '</option>';
+function loadPartOptions() {
+    // Initialize Select2 with AJAX
+    $('#part-no').select2({
+        placeholder: 'Select Part Number',
+        allowClear: true,
+        ajax: {
+            url: '<?= base_url('material-shortage/parts') ?>',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    search: params.term, // search term
+                    page: params.page || 1
+                };
+            },
+            processResults: function (data, params) {
+                params.page = params.page || 1;
+                
+                if (!data.success) {
+                    toastr.error('Failed to load part options');
+                    return { results: [] };
+                }
+                
+                // Add 'All Parts' option only on first page
+                var results = data.parts.map(function(part) {
+                    return {
+                        id: part.part_no,
+                        text: part.part_no
+                    };
                 });
-                $('#model-no').html(options);
-            } else {
-                toastr.error('Failed to load model options');
-            }
+                
+                if (params.page === 1) {
+                    results.unshift({
+                        id: '',
+                        text: 'All Parts'
+                    });
+                }
+                
+                return {
+                    results: results,
+                    pagination: {
+                        more: (params.page * 20) < data.total_count
+                    }
+                };
+            },
+            cache: true
         },
-        error: function(xhr, status, error) {
-            toastr.error('Error loading model options: ' + error);
-        },
-        complete: function() {
-            $('#model-no').prop('disabled', false);
-        }
+        minimumInputLength: 0,
+        width: '100%',
+        dropdownCssClass: 'select2-dropdown-large'
     });
 }
 
@@ -664,7 +757,7 @@ function loadMaterialShortageData() {
     var dateRange = $('#date-range').val().split(' to ');
     var startDate = dateRange[0] ? dateRange[0].trim() : null;
     var endDate = dateRange[1] ? dateRange[1].trim() : null;
-    var modelNo = $('#model-no').val();
+    var partNo = $('#part-no').val();
     var hClass = $('#h-class').val();
     var classVal = $('#class').val();
     var minusOnly = $('#minus-only').prop('checked');
@@ -675,9 +768,27 @@ function loadMaterialShortageData() {
         return;
     }
     
-    // Pastikan format YYYY-MM-DD
-    var startDateFormatted = moment(startDate).format('YYYY-MM-DD');
-    var endDateFormatted = moment(endDate).format('YYYY-MM-DD');
+    // Pastikan format YYYY-MM-DD dengan validasi
+    try {
+        // Validasi format tanggal
+        if (!startDate.match(/^\d{4}-\d{2}-\d{2}$/) || !endDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            console.warn('Date format validation failed, attempting to reformat...');
+            // Coba format ulang dengan moment jika format tidak sesuai
+            startDate = moment(startDate).format('YYYY-MM-DD');
+            endDate = moment(endDate).format('YYYY-MM-DD');
+        }
+        
+        // Simpan format yang sudah benar
+        var startDateFormatted = startDate;
+        var endDateFormatted = endDate;
+        
+        console.log('Validated dates:', startDateFormatted, endDateFormatted);
+    } catch (error) {
+        console.error('Date validation error:', error);
+        alert('Invalid date format. Please select a valid date range.');
+        $('#loading-overlay').hide();
+        return;
+    }
     
     // Show loading overlay
     $('#loading-overlay').show();
@@ -686,7 +797,7 @@ function loadMaterialShortageData() {
     console.log('Material Shortage Request Parameters:', {
         start_date: startDateFormatted,
         end_date: endDateFormatted,
-        model_no: modelNo,
+        part_no: partNo,
         h_class: hClass,
         class: classVal,
         minus_only: minusOnly
@@ -698,7 +809,7 @@ function loadMaterialShortageData() {
         data: {
             start_date: startDateFormatted,
             end_date: endDateFormatted,
-            model_no: modelNo,
+            part_no: partNo,
             h_class: hClass,
             class: classVal,
             minus_only: minusOnly
@@ -712,10 +823,82 @@ function loadMaterialShortageData() {
                 if (Array.isArray(response.data) && response.data.length > 0) {
                     console.log('Data received:', response.data.length, 'items');
                     console.log('Sample item:', response.data[0]);
-                    renderTable(response.data, startDateFormatted, endDateFormatted);
+                    
+                    // Check if date 17 exists in the API response data
+                    var found17th = false;
+                    if (response.data && response.data.length > 0 && response.data[0].daily_data) {
+                        Object.keys(response.data[0].daily_data).forEach(function(dateKey) {
+                            try {
+                                // Extract day safely without moment
+                                var dateParts = dateKey.split('-');
+                                if (dateParts.length === 3) {
+                                    var day = dateParts[2];
+                                    if (day === '17') {
+                                        found17th = true;
+                                        console.log('Found date 17 in API data:', dateKey);
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('Error checking date:', dateKey, error);
+                            }
+                        });
+                        if (!found17th) {
+                            console.warn('WARNING: Date 17 is missing from API response data!');
+                        }
+                    }
+                    
+                    // Generate all dates in range (sorted chronologically)
+                    var allDates = [];
+                    
+                    try {
+                        // Parse dates to get components
+                        var startParts = startDateFormatted.split('-');
+                        var endParts = endDateFormatted.split('-');
+                        
+                        if (startParts.length !== 3 || endParts.length !== 3) {
+                            throw new Error('Invalid date format');
+                        }
+                        
+                        // Create Date objects
+                        var startObj = new Date(parseInt(startParts[0]), parseInt(startParts[1])-1, parseInt(startParts[2]));
+                        var endObj = new Date(parseInt(endParts[0]), parseInt(endParts[1])-1, parseInt(endParts[2]));
+                        
+                        // Calculate difference in days
+                        var diffTime = Math.abs(endObj - startObj);
+                        var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        
+                        console.log('Date range spans', diffDays, 'days');
+                        
+                        // Generate all dates in range
+                        var currentDate = new Date(startObj);
+                        for (var i = 0; i <= diffDays; i++) {
+                            var year = currentDate.getFullYear();
+                            var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                            var day = currentDate.getDate().toString().padStart(2, '0');
+                            var dateStr = year + '-' + month + '-' + day;
+                            allDates.push(dateStr);
+                            currentDate.setDate(currentDate.getDate() + 1);
+                        }
+                    } catch (error) {
+                        console.error('Error generating date range:', error);
+                        // Fallback: use a simple date range with the current month
+                        var today = new Date();
+                        var year = today.getFullYear();
+                        var month = (today.getMonth() + 1).toString().padStart(2, '0');
+                        
+                        // Generate dates 1-31 for current month
+                        for (var day = 1; day <= 31; day++) {
+                            var dateStr = year + '-' + month + '-' + day.toString().padStart(2, '0');
+                            allDates.push(dateStr);
+                        }
+                    }
+                    
+                    console.log('Generated date range for rendering:', allDates);
+                    renderTable(response.data, startDateFormatted, endDateFormatted, allDates);
                 } else {
                     console.log('No data or empty array received');
                     $('#material-shortage-table tbody').html('<tr><td colspan="100%" class="text-center py-3">No data available</td></tr>');
+                    $('#loading-overlay').hide();
                 }
             } else {
                 console.error('API returned error:', response.message);
@@ -731,47 +914,509 @@ function loadMaterialShortageData() {
     });
 }
 
-function renderTable(data, startDate, endDate) {
-    console.log('Rendering table with data:', data);
-    console.log('Date range:', startDate, 'to', endDate);
+function renderTable(data, startDate, endDate, sortedDates) {
+    console.log('DEBUG: Starting renderTable function');
+    console.log('DEBUG: Rendering table with data:', data);
+    
+    // Clear existing table content
+    $('#material-shortage-table thead').empty();
+    $('#material-shortage-table tbody').empty();
+    
+    console.log('DEBUG: Table cleared');
+    
+    if (!data || !Array.isArray(data) || data.length === 0) {
+        console.error('No data to render');
+        $('#error-message').text('No data available').show();
+        $('#loading-overlay').hide();
+        return;
+    }
+    
+    // Ensure we have valid start and end dates
+    if (!startDate || !endDate) {
+        console.error('Invalid start or end date');
+        $('#error-message').text('Invalid date range').show();
+        $('#loading-overlay').hide();
+        return;
+    }
+    
+    // Use the provided sortedDates if available
+    var allDates = [];
+    
+    if (Array.isArray(sortedDates) && sortedDates.length > 0) {
+        console.log('Using provided sorted dates array');
+        allDates = sortedDates;
+    } else {
+        // Generate dates array from scratch
+        try {
+            console.log('Generating fresh dates array from', startDate, 'to', endDate);
+            
+            // Parse dates to get components
+            var startParts = startDate.split('-');
+            var endParts = endDate.split('-');
+            
+            if (startParts.length !== 3 || endParts.length !== 3) {
+                throw new Error('Invalid date format');
+            }
+            
+            // Create Date objects
+            var startObj = new Date(parseInt(startParts[0]), parseInt(startParts[1])-1, parseInt(startParts[2]));
+            var endObj = new Date(parseInt(endParts[0]), parseInt(endParts[1])-1, parseInt(endParts[2]));
+            
+            // Calculate difference in days
+            var diffTime = Math.abs(endObj - startObj);
+            var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            console.log('Date range spans', diffDays, 'days');
+            
+            // Generate all dates in range
+            var currentDate = new Date(startObj);
+            for (var i = 0; i <= diffDays; i++) {
+                var year = currentDate.getFullYear();
+                var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                var day = currentDate.getDate().toString().padStart(2, '0');
+                var dateStr = year + '-' + month + '-' + day;
+                allDates.push(dateStr);
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+        } catch (error) {
+            console.error('Error generating dates:', error);
+            $('#error-message').text('Error processing dates').show();
+            $('#loading-overlay').hide();
+            return;
+        }
+    }
+    
+    console.log('Using dates:', startDate, 'to', endDate);
+    console.log('All dates in range (sorted):', allDates);
+    
+    // Debug: Check if dates are actually sorted correctly
+    console.log('Dates in ISO format for verification:');
+    allDates.forEach(function(date, index) {
+        if (date && typeof date === 'string') {
+            var parts = date.split('-');
+            if (parts.length === 3) {
+                console.log(index + ':', date, '=', parts[2] + '-' + parts[1] + '-' + parts[0]);
+            } else {
+                console.log(index + ':', date, '= Invalid format');
+            }
+        } else {
+            console.log(index + ':', date, '= Invalid date');
+        }
+    });
+    
+    // Debug: Log all dates before processing
+    console.log('All dates before processing:', allDates);
+    
+    // Ensure all dates are valid strings in YYYY-MM-DD format
+    console.log('Ensuring all dates are valid...');
+    for (var i = 0; i < allDates.length; i++) {
+        if (typeof allDates[i] !== 'string' || !allDates[i].match(/^\d{4}-\d{2}-\d{2}$/)) {
+            console.error('Invalid date format at index', i, ':', allDates[i]);
+            allDates[i] = null; // Mark for removal
+        }
+    }
+    
+    // Remove null entries
+    allDates = allDates.filter(function(date) {
+        return date !== null;
+    });
+    
+    console.log('Dates after format validation:', allDates);
+    
+    // Sort dates chronologically using proper Date object comparison
+    console.log('Sorting dates chronologically...');
+    
+    // Ensure all dates are valid before sorting
+    var validDates = allDates.filter(function(dateStr) {
+        return dateStr && typeof dateStr === 'string' && dateStr.match(/^\d{4}-\d{2}-\d{2}$/);
+    });
+    
+    // CRITICAL FIX: Sort using Date objects to ensure proper chronological order
+    // This ensures dates are sorted by actual date value, not string comparison
+    console.log('BEFORE SORTING:', validDates);
+    validDates.sort(function(a, b) {
+        // Convert strings to Date objects for proper comparison
+        var dateA = new Date(a + 'T00:00:00Z'); // Add time component for consistent parsing
+        var dateB = new Date(b + 'T00:00:00Z');
+        
+        // Debug output to verify sorting
+        if (validDates.length < 50) { // Only log if not too many dates to avoid console spam
+            console.log('Comparing:', a, '(', dateA, ') vs', b, '(', dateB, ') =', dateA - dateB);
+        }
+        
+        return dateA - dateB;
+    });
+    console.log('AFTER SORTING:', validDates);
+    
+    // Double-check the sort worked correctly
+    var isSorted = true;
+    for (var i = 1; i < validDates.length; i++) {
+        var prevDate = new Date(validDates[i-1] + 'T00:00:00Z');
+        var currDate = new Date(validDates[i] + 'T00:00:00Z');
+        if (currDate < prevDate) {
+            console.error('CRITICAL ERROR: Dates still not sorted correctly after sorting!');
+            console.error('Date at position', i-1, ':', validDates[i-1], 'comes AFTER', validDates[i]);
+            isSorted = false;
+            break;
+        }
+    }
+    
+    if (isSorted) {
+        console.log('✓ VERIFICATION: Dates are properly sorted in chronological order');
+    } else {
+        console.error('✗ ERROR: Dates are NOT properly sorted! Manual fix required.');
+        // Force manual sort as a last resort
+        validDates.sort(function(a, b) {
+            // Parse dates manually to avoid timezone issues
+            var partsA = a.split('-');
+            var partsB = b.split('-');
+            
+            // Compare years
+            if (parseInt(partsA[0]) !== parseInt(partsB[0])) {
+                return parseInt(partsA[0]) - parseInt(partsB[0]);
+            }
+            
+            // Compare months
+            if (parseInt(partsA[1]) !== parseInt(partsB[1])) {
+                return parseInt(partsA[1]) - parseInt(partsB[1]);
+            }
+            
+            // Compare days
+            return parseInt(partsA[2]) - parseInt(partsB[2]);
+        });
+        console.log('After manual sort:', validDates);
+    }
+    
+    // Replace the original array with the sorted valid dates
+    allDates = validDates;
+    
+    console.log('Dates sorted successfully using Date object comparison');
+    
+    // Debug: Check if dates are sorted correctly AFTER sorting
+    console.log('AFTER SORTING - Dates in ISO format:');
+    console.log('Total dates after sorting:', allDates.length);
+    
+    // Verify the dates are in correct chronological order
+    var previousDate = null;
+    var isChronological = true;
+    
+    allDates.forEach(function(date, index) {
+        var dateParts = date.split('-');
+        var year = dateParts[0];
+        var month = dateParts[1];
+        var day = dateParts[2];
+        console.log(index + ':', date, '=', day + '-' + month + '-' + year);
+        
+        // Check if dates are in chronological order
+        var currentDate = new Date(date);
+        if (previousDate !== null) {
+            if (currentDate < previousDate) {
+                console.error('SORTING ERROR: Date', date, 'is earlier than previous date', previousDate);
+                isChronological = false;
+            }
+        }
+        previousDate = currentDate;
+    });
+    
+    if (isChronological) {
+        console.log('✓ Dates are correctly sorted in chronological order');
+    } else {
+        console.error('✗ Dates are NOT in chronological order! This will cause calculation errors.');
+    }
+    
+    // Ensure all dates in the selected range are present
+    console.log('Validating all dates in the selected range are present...');
+    
+    // Convert start and end dates to Date objects
+    var startDateObj = new Date(startDate);
+    var endDateObj = new Date(endDate);
+    
+    // Create a map of all dates in the array for quick lookup
+    var dateMap = {};
+    allDates.forEach(function(date) {
+        dateMap[date] = true;
+    });
+    
+    // Check each date in the range
+    var missingDates = [];
+    var currentDate = new Date(startDateObj);
+    
+    while (currentDate <= endDateObj) {
+        // Format the current date as YYYY-MM-DD
+        var year = currentDate.getFullYear();
+        var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        var day = currentDate.getDate().toString().padStart(2, '0');
+        var dateStr = year + '-' + month + '-' + day;
+        
+        // Check if this date is in our array
+        if (!dateMap[dateStr]) {
+            console.warn('Missing date in range:', dateStr);
+            missingDates.push(dateStr);
+        }
+        
+        // Move to next day
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    // Add any missing dates
+    if (missingDates.length > 0) {
+        console.warn('Found', missingDates.length, 'missing dates in the selected range');
+        
+        // Add all missing dates to the array
+        missingDates.forEach(function(dateStr) {
+            console.log('Adding missing date:', dateStr);
+            allDates.push(dateStr);
+        });
+        
+        // Sort again after adding missing dates
+        allDates.sort(function(a, b) {
+            var dateA = new Date(a);
+            var dateB = new Date(b);
+            return dateA - dateB;
+        });
+        
+        console.log('Re-sorted dates after adding missing dates');
+    } else {
+        console.log('✓ All dates in the selected range are present');
+    }
+    
+    // Specifically check for date 17 (as it was mentioned as problematic)
+    var has17th = false;
+    allDates.forEach(function(date) {
+        var day = date.split('-')[2];
+        if (day === '17') {
+            has17th = true;
+            console.log('Verified date 17 is present:', date);
+        }
+    });
+    
+    if (!has17th) {
+        console.error('CRITICAL ERROR: Date 17 is still missing after validation!');
+    }
     
     // Clear existing table
     var table = $('#material-shortage-table');
     var thead = table.find('thead');
     var tbody = table.find('tbody');
     
-    // Clear previous data
-    thead.empty();
-    tbody.empty();
+    // Calculate date range difference for logging
+    var startParts = startDate.split('-');
+    var endParts = endDate.split('-');
+    var startObj = new Date(parseInt(startParts[0]), parseInt(startParts[1])-1, parseInt(startParts[2]));
+    var endObj = new Date(parseInt(endParts[0]), parseInt(endParts[1])-1, parseInt(endParts[2]));
+    var diffTime = Math.abs(endObj - startObj);
+    var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    // FIXED: startDate and endDate are already in YYYY-MM-DD format from the clean AJAX call
-    var startDateFormatted = startDate;
-    var endDateFormatted = endDate;
-    
-    console.log('Using dates:', startDateFormatted, 'to', endDateFormatted);
-    
-    // Calculate date difference using properly formatted dates
-    var start = moment(startDateFormatted);
-    var end = moment(endDateFormatted);
-    var diff = end.diff(start, 'days');
-    
-    console.log('Date range:', startDateFormatted, 'to', endDateFormatted, '(', diff, 'days)');
+    console.log('Date range:', startDate, 'to', endDate, '(', diffDays, 'days)');
     
     // Create header row with proper styling
     var headerRow = $('<tr>');
-    headerRow.append($('<th>').addClass('model-cell').text('Model No'));
-    headerRow.append($('<th>').addClass('h-class-cell').text('H Class'));
-    headerRow.append($('<th>').addClass('part-cell').text('Part No'));
-    headerRow.append($('<th>').addClass('desc-cell').text('Description'));
-    headerRow.append($('<th>').addClass('class-cell').text('Class'));
-    headerRow.append($('<th>').addClass('label-cell').text('Item'));
-    headerRow.append($('<th>').addClass('stock-cell').text('Begin Stock'));
     
-    // Add date columns to header
-    for (var i = 0; i <= diff; i++) {
-        var date = moment(startDateFormatted).add(i, 'days');
-        headerRow.append($('<th>').addClass('date-header date-column').text(date.format('DD')));
+    // Function to create header cell with gray gradient background
+    function createHeaderCell(className, text) {
+        var width = '100px'; // Default width
+        
+        // Set specific widths based on column type
+        if (className === 'label-cell') {
+            width = '180px';
+        } else if (className === 'h-class-cell') {
+            width = '100px';
+        } else if (className === 'stock-cell') {
+            width = '120px';
+        } else if (className === 'part-cell') {
+            width = '150px';
+        } else if (className === 'desc-cell') {
+            width = '200px';
+        } else if (className === 'model-cell') {
+            width = '150px';
+        } else if (className === 'class-cell') {
+            width = '100px';
+        }
+        
+        return $('<th>')
+            .addClass(className)
+            .text(text)
+            .css({
+                'background': 'linear-gradient(to bottom, rgba(108, 117, 125, 0.85), rgba(108, 117, 125, 0.65))',
+                'color': 'white',
+                'border': '1px solid rgba(108, 117, 125, 0.5)',
+                'min-width': width,
+                'width': width,
+                'font-weight': '500',
+                'font-size': '0.82rem',
+                'text-transform': 'uppercase',
+                'letter-spacing': '0.6px',
+                'font-family': "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+                'white-space': 'nowrap'
+            });
     }
+    
+    // Add header cells with red styling
+    headerRow.append(createHeaderCell('model-cell', 'Model No'));
+    headerRow.append(createHeaderCell('h-class-cell', 'H Class'));
+    headerRow.append(createHeaderCell('part-cell', 'Part No'));
+    headerRow.append(createHeaderCell('desc-cell', 'Description'));
+    headerRow.append(createHeaderCell('class-cell', 'Class'));
+    headerRow.append(createHeaderCell('label-cell', 'Item'));
+    headerRow.append(createHeaderCell('stock-cell', 'Begin Stock'));
+    
+    // Add date columns to header using sorted dates
+    console.log('Adding date columns to header:');
+    
+    // Verify dates are sorted before adding to header
+    console.log('Verifying dates are sorted before adding to header...');
+    var isSorted = true;
+    var prevDate = null;
+    
+    for (var i = 0; i < allDates.length; i++) {
+        var currentDate = new Date(allDates[i]);
+        if (prevDate !== null && currentDate < prevDate) {
+            console.error('CRITICAL ERROR: Dates are not properly sorted at index', i, ':', allDates[i], 'comes after', allDates[i-1]);
+            isSorted = false;
+            break;
+        }
+        prevDate = currentDate;
+    }
+    
+    if (!isSorted) {
+        console.warn('Re-sorting dates before adding to header...');
+        allDates.sort(function(a, b) {
+            return new Date(a) - new Date(b);
+        });
+    }
+    
+    // Now add the properly sorted dates to the header
+    allDates.forEach(function(dateStr, index) {
+        try {
+            // Parse date using native JS
+            var dateParts = dateStr.split('-');
+            if (dateParts.length === 3) {
+                var dayStr = dateParts[2].padStart(2, '0'); // Ensure 2 digits
+                var monthStr = dateParts[1].padStart(2, '0'); // Ensure 2 digits
+                console.log('Header column', index, ':', dateStr, '=', dayStr + '-' + monthStr);
+                
+                // Add data-date attribute for easier debugging and reference
+                headerRow.append($('<th>')
+                    .addClass('date-header text-center')
+                    .attr('data-date', dateStr)
+                    .text(dayStr)
+                    .css({
+                        'background': 'linear-gradient(to bottom, rgba(108, 117, 125, 0.85), rgba(108, 117, 125, 0.65))',
+                        'color': 'white',
+                        'border': '1px solid rgba(108, 117, 125, 0.5)',
+                        'min-width': '60px',
+                        'width': '60px',
+                        'font-weight': '500',
+                        'font-size': '0.82rem',
+                        'text-transform': 'uppercase',
+                        'letter-spacing': '0.6px',
+                        'font-family': "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+                        'white-space': 'nowrap'
+                    }));
+            } else {
+                console.error('Invalid date format for header:', dateStr);
+                headerRow.append($('<th>').addClass('date-header text-center').text('??'));
+            }
+        } catch (error) {
+            console.error('Error parsing date for header:', dateStr, error);
+            headerRow.append($('<th>').addClass('date-header text-center').text('??'));
+        }
+    });
+    
+    // Debug: Log the final header structure and verify date order
+    setTimeout(function() {
+        console.log('FINAL HEADER STRUCTURE:');
+        
+        // Collect all date headers for verification
+        var dateHeaders = [];
+        var dateHeadersText = [];
+        var fullDateValues = [];
+        
+        $('#material-shortage-table thead th').each(function(index) {
+            console.log('Header', index, ':', $(this).text());
+            
+            // Check if this is a date header (has data-date attribute)
+            var dateAttr = $(this).attr('data-date');
+            if (dateAttr) {
+                dateHeaders.push({
+                    index: index,
+                    date: dateAttr,
+                    text: $(this).text()
+                });
+                dateHeadersText.push($(this).text());
+                fullDateValues.push(dateAttr); // Store the full date value
+            }
+        });
+        
+        // CRITICAL DEBUG: Log the actual full date values in the header
+        console.log('CRITICAL DEBUG - Full date values in header (YYYY-MM-DD):', fullDateValues);
+        
+        // Check if dates are sorted by day only (ignoring month)
+        var dayOnlyValues = fullDateValues.map(function(dateStr) {
+            return parseInt(dateStr.split('-')[2]); // Extract day part
+        });
+        console.log('CRITICAL DEBUG - Day-only values:', dayOnlyValues);
+        
+        // Check if dates are sorted by full date
+        var dateObjects = fullDateValues.map(function(dateStr) {
+            return new Date(dateStr + 'T00:00:00Z');
+        });
+        
+        // Log the actual date objects for comparison
+        console.log('CRITICAL DEBUG - Date objects:');
+        dateObjects.forEach(function(dateObj, index) {
+            console.log(index, ':', fullDateValues[index], '=', dateObj.toISOString());
+        });
+        
+        // Verify date headers are in chronological order
+        var isChronological = true;
+        for (var i = 1; i < dateHeaders.length; i++) {
+            var prevDate = new Date(dateHeaders[i-1].date + 'T00:00:00Z');
+            var currDate = new Date(dateHeaders[i].date + 'T00:00:00Z');
+            
+            if (currDate < prevDate) {
+                console.error('CRITICAL ERROR: Date headers are not in chronological order!');
+                console.error('Date at position', i-1, ':', dateHeaders[i-1].date, '(', dateHeaders[i-1].text, ')');
+                console.error('comes AFTER date at position', i, ':', dateHeaders[i].date, '(', dateHeaders[i].text, ')');
+                isChronological = false;
+                break;
+            }
+        }
+        
+        // Check if we're crossing month boundary
+        var monthBoundary = false;
+        var monthChange = [];
+        for (var i = 1; i < fullDateValues.length; i++) {
+            var prevMonth = parseInt(fullDateValues[i-1].split('-')[1]);
+            var currMonth = parseInt(fullDateValues[i].split('-')[1]);
+            
+            if (prevMonth !== currMonth) {
+                monthBoundary = true;
+                monthChange.push({
+                    position: i,
+                    from: fullDateValues[i-1],
+                    to: fullDateValues[i]
+                });
+            }
+        }
+        
+        if (monthBoundary) {
+            console.log('CRITICAL DEBUG - Month boundary detected! Month changes at:', monthChange);
+        }
+        
+        if (isChronological) {
+            console.log('✓ VERIFICATION SUCCESSFUL: All date headers are in correct chronological order');
+            console.log('Date sequence:', dateHeadersText.join(', '));
+            
+            // Additional verification for month boundary issue
+            if (monthBoundary) {
+                console.log('CRITICAL DEBUG - WARNING: Dates are chronologically sorted but cross month boundary!');
+                console.log('This may explain why days appear out of order (e.g., 31, 01, 02...)');
+            }
+        } else {
+            console.error('✗ VERIFICATION FAILED: Date headers are NOT in chronological order!');
+        }
+    }, 500);
     
     thead.append(headerRow);
     
@@ -817,17 +1462,42 @@ function renderTable(data, startDate, endDate) {
             };
             
             // Initialize daily_data for all dates in range
-            for (var i = 0; i <= diff; i++) {
-                var dateStr = moment(startDateFormatted).add(i, 'days').format('YYYY-MM-DD');
-                groupedData[key].daily_data[dateStr] = {
-                    use_plan: 0,
-                    use_act: 0,
-                    eta: 0,
-                    inv_no: '',
-                    stock_plan: 0,
-                    stock_act: 0
-                };
+            // Make sure we're using the sorted dates array
+            console.log('Initializing daily_data for all dates in range for item:', key);
+            
+            // Verify dates are sorted before initializing
+            var verifiedDates = [...allDates]; // Create a copy to avoid modifying the original
+            verifiedDates.sort(function(a, b) {
+                return new Date(a) - new Date(b);
+            });
+            
+            // Check if our allDates array is properly sorted
+            var datesAreSorted = JSON.stringify(allDates) === JSON.stringify(verifiedDates);
+            if (!datesAreSorted) {
+                console.error('CRITICAL ERROR: allDates array is not properly sorted when initializing daily_data!');
+                console.log('Current order:', allDates);
+                console.log('Correct order:', verifiedDates);
+                // Use the correctly sorted array
+                allDates = verifiedDates;
             }
+            
+            // Now initialize with the verified sorted dates
+            allDates.forEach(function(dateStr, index) {
+                if (dateStr && typeof dateStr === 'string') {
+                    groupedData[key].daily_data[dateStr] = {
+                        use_plan: 0,
+                        use_act: 0,
+                        eta: 0,
+                        inv_no: '',
+                        stock_plan: 0,
+                        stock_act: 0
+                    };
+                    
+                    if (index % 10 === 0) { // Log every 10th date to avoid console spam
+                        console.log('Initialized date', index, ':', dateStr, 'for item', key);
+                    }
+                }
+            });
         }
         
         // Process daily_data from API response (API now returns correct dates)
@@ -839,25 +1509,37 @@ function renderTable(data, startDate, endDate) {
                 var apiDailyData = item.daily_data[apiDate];
                 console.log('Processing API date:', apiDate, 'with data:', apiDailyData);
                 
-                // Check if this date is within our range
-                var apiMoment = moment(apiDate, 'YYYY-MM-DD', true);
-                console.log('Checking date range for', apiDate, '- start:', start.format('YYYY-MM-DD'), 'end:', end.format('YYYY-MM-DD'));
-                console.log('API moment valid:', apiMoment.isValid(), 'isSameOrAfter:', apiMoment.isSameOrAfter(start), 'isSameOrBefore:', apiMoment.isSameOrBefore(end));
-                
-                if (apiMoment.isValid() && apiMoment.isSameOrAfter(start) && apiMoment.isSameOrBefore(end)) {
-                    // Date is within range, use it directly
-                    groupedData[key].daily_data[apiDate] = {
-                        use_plan: parseFloat(apiDailyData.use_plan || 0),
-                        use_act: parseFloat(apiDailyData.use_act || 0),
-                        eta: parseFloat(apiDailyData.eta || 0),
-                        inv_no: apiDailyData.inv_no || '',
-                        stock_plan: parseFloat(apiDailyData.stock_plan || 0),
-                        stock_act: parseFloat(apiDailyData.stock_act || 0)
-                    };
+                // Check if this date is within our range using native JS
+                try {
+                    // Parse dates to compare
+                    var isDateInRange = false;
                     
-                    console.log('✓ Mapped data to date', apiDate, ':', groupedData[key].daily_data[apiDate]);
-                } else {
-                    console.log('✗ API date outside range or invalid:', apiDate, 'ignoring');
+                    if (apiDate && typeof apiDate === 'string' && apiDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        // Check if date is in allDates array (which is already filtered to our range)
+                        isDateInRange = allDates.includes(apiDate);
+                        
+                        console.log('Checking if', apiDate, 'is in range:', isDateInRange);
+                    } else {
+                        console.warn('Invalid API date format:', apiDate);
+                    }
+                    
+                    if (isDateInRange) {
+                        // Date is within range, use it directly
+                        groupedData[key].daily_data[apiDate] = {
+                            use_plan: parseFloat(apiDailyData.use_plan || 0),
+                            use_act: parseFloat(apiDailyData.use_act || 0),
+                            eta: parseFloat(apiDailyData.eta || 0),
+                            inv_no: apiDailyData.inv_no || '',
+                            stock_plan: parseFloat(apiDailyData.stock_plan || 0),
+                            stock_act: parseFloat(apiDailyData.stock_act || 0)
+                        };
+                        
+                        console.log('✓ Mapped data to date', apiDate, ':', groupedData[key].daily_data[apiDate]);
+                    } else {
+                        console.log('✗ API date outside range or invalid:', apiDate, 'ignoring');
+                    }
+                } catch (error) {
+                    console.error('Error processing API date:', apiDate, error);
                 }
             });
         } else {
@@ -876,23 +1558,23 @@ function renderTable(data, startDate, endDate) {
         
         console.log('Ensuring all dates exist for group:', key);
         
-        // Generate dates array from startDate to endDate
-        for (var i = 0; i <= diff; i++) {
-            var date = moment(startDateFormatted).add(i, 'days').format('YYYY-MM-DD');
-            
-            // Only add default values if date doesn't exist
-            if (!group.daily_data[date]) {
-                group.daily_data[date] = {
-                    use_plan: 0,
-                    use_act: 0,
-                    eta: 0,
-                    inv_no: '',
-                    stock_plan: 0,
-                    stock_act: 0
-                };
-                console.log('Added default values for missing date:', date);
+        // Use allDates array which is already properly generated and sorted
+        allDates.forEach(function(date) {
+            if (date && typeof date === 'string') {
+                // Only add default values if date doesn't exist
+                if (!group.daily_data[date]) {
+                    group.daily_data[date] = {
+                        use_plan: 0,
+                        use_act: 0,
+                        eta: 0,
+                        inv_no: '',
+                        stock_plan: 0,
+                        stock_act: 0
+                    };
+                    console.log('Added default values for missing date:', date);
+                }
             }
-        }
+        });
         
         console.log('Final daily_data for', key, ':', group.daily_data);
     });
@@ -975,32 +1657,96 @@ function renderTable(data, startDate, endDate) {
             stockActRow.append($('<td>').addClass('label-cell').text('Stock Act'));
             stockActRow.append($('<td>').addClass('stock-cell text-right').text(formatNumber(group.begin_stock)));
             
-            // Add date columns
-            for (var i = 0; i <= diff; i++) {
-                var date = moment(startDateFormatted).add(i, 'days');
-                var dateStr = date.format('YYYY-MM-DD');
-                var dailyData = group.daily_data[dateStr] || {
-                    use_plan: 0,
-                    use_act: 0,
-                    eta: 0,
-                    inv_no: '',
-                    stock_plan: 0,
-                    stock_act: 0
-                };
+            // Add date columns using sorted dates
+            console.log('Adding date columns to body rows for group:', group.model_no, group.part_no);
+            console.log('Processing API date with daily_data:', group.daily_data);
+            
+            // Ensure group.daily_data exists to prevent errors
+            if (!group.daily_data) {
+                console.error('daily_data is undefined for group:', group);
+                group.daily_data = {};
+            }
+            
+            // Verify dates are sorted before rendering
+            var verifiedDates = [...allDates]; // Create a copy to avoid modifying the original
+            verifiedDates.sort(function(a, b) {
+                return new Date(a) - new Date(b);
+            });
+            
+            // Check if our allDates array is properly sorted
+            var datesAreSorted = JSON.stringify(allDates) === JSON.stringify(verifiedDates);
+            if (!datesAreSorted) {
+                console.error('CRITICAL ERROR: allDates array is not properly sorted when rendering table rows!');
+                console.log('Current order:', allDates);
+                console.log('Correct order:', verifiedDates);
+                // Use the correctly sorted array
+                allDates = verifiedDates;
+            }
+            
+            // Now render with the verified sorted dates
+            allDates.forEach(function(dateStr, index) {
+                // Ensure dateStr is valid before processing
+                if (!dateStr) {
+                    console.error('Invalid dateStr at index', index);
+                    return; // Skip this iteration
+                }
+                
+                var dailyData;
+                try {
+                    // Parse date using native JS
+                    var dateParts = dateStr.split('-');
+                    if (dateParts.length === 3) {
+                        var dayStr = dateParts[2].padStart(2, '0'); // Ensure 2 digits
+                        var monthStr = dateParts[1].padStart(2, '0'); // Ensure 2 digits
+                        
+                        // Log every 5th date to avoid console spam
+                        if (index % 5 === 0) {
+                            console.log('Body column', index, ':', dateStr, '=', dayStr + '-' + monthStr);
+                        }
+                        
+                        // Verify this date exists in the group's daily_data
+                        if (!group.daily_data[dateStr]) {
+                            console.warn('Missing daily data for date', dateStr, 'in group', key);
+                            // Add default values
+                            group.daily_data[dateStr] = {
+                                use_plan: 0,
+                                use_act: 0,
+                                eta: 0,
+                                inv_no: '',
+                                stock_plan: 0,
+                                stock_act: 0
+                            };
+                        }
+                        
+                        dailyData = group.daily_data[dateStr];
+                    } else {
+                        throw new Error('Invalid date format: ' + dateStr);
+                    }
+                } catch (error) {
+                    console.error('Error processing date:', dateStr, error);
+                    dailyData = {
+                        use_plan: 0,
+                        use_act: 0,
+                        eta: 0,
+                        inv_no: '',
+                        stock_plan: 0,
+                        stock_act: 0
+                    };
+                }
                 
                 // Format numbers and add classes for negative values
-                var usePlanValue = formatNumber(dailyData.use_plan);
-                var useActValue = formatNumber(dailyData.use_act);
-                var etaValue = formatNumber(dailyData.eta);
-                var stockPlanValue = formatNumber(dailyData.stock_plan);
-                var stockActValue = formatNumber(dailyData.stock_act);
+                var usePlanValue = formatNumber(dailyData.use_plan || 0);
+                var useActValue = formatNumber(dailyData.use_act || 0);
+                var etaValue = formatNumber(dailyData.eta || 0);
+                var stockPlanValue = formatNumber(dailyData.stock_plan || 0);
+                var stockActValue = formatNumber(dailyData.stock_act || 0);
                 
-                // Add classes for negative values
-                var usePlanClass = dailyData.use_plan < 0 ? 'negative-value' : '';
-                var useActClass = dailyData.use_act < 0 ? 'negative-value' : '';
-                var etaClass = dailyData.eta < 0 ? 'negative-value' : '';
-                var stockPlanClass = dailyData.stock_plan < 0 ? 'negative-value' : '';
-                var stockActClass = dailyData.stock_act < 0 ? 'negative-value' : '';
+                // Add classes for negative values - ensure values are numbers
+                var usePlanClass = (dailyData.use_plan || 0) < 0 ? 'negative-value' : '';
+                var useActClass = (dailyData.use_act || 0) < 0 ? 'negative-value' : '';
+                var etaClass = (dailyData.eta || 0) < 0 ? 'negative-value' : '';
+                var stockPlanClass = (dailyData.stock_plan || 0) < 0 ? 'negative-value' : '';
+                var stockActClass = (dailyData.stock_act || 0) < 0 ? 'negative-value' : '';
                 
                 // Append cells with proper formatting and date-column class
                 usePlanRow.append($('<td>').addClass('date-column text-right ' + usePlanClass).text(usePlanValue));
@@ -1009,7 +1755,7 @@ function renderTable(data, startDate, endDate) {
                 invNoRow.append($('<td>').addClass('date-column text-center').text(dailyData.inv_no || ''));
                 stockPlanRow.append($('<td>').addClass('date-column text-right ' + stockPlanClass).text(stockPlanValue));
                 stockActRow.append($('<td>').addClass('date-column text-right ' + stockActClass).text(stockActValue));
-            }
+            });
             
             // Append all rows to tbody as a group
             var partGroup = $('<div>').addClass('part-group-container');
@@ -1047,27 +1793,48 @@ function renderTable(data, startDate, endDate) {
     
     // Final check before initializing DataTables
     var allRowsValid = true;
-    tbody.find('tr').each(function() {
+    
+    // Log detailed column counts for debugging
+    console.log('HEADER COLUMN COUNT:', headerColumnCount);
+    console.log('HEADER COLUMNS:', thead.find('th').map(function() { return $(this).text(); }).get());
+    
+    // First verify the header has the expected number of columns
+    var actualHeaderCount = thead.find('th').length;
+    if (actualHeaderCount !== headerColumnCount) {
+        console.error('Header column count mismatch:', actualHeaderCount, 'should be', headerColumnCount);
+        // Update the headerColumnCount to match actual header
+        headerColumnCount = actualHeaderCount;
+        console.log('Updated headerColumnCount to', headerColumnCount);
+    }
+    
+    // Now check and fix each row
+    tbody.find('tr').each(function(index) {
         var rowColumnCount = $(this).find('td').length;
         
         // Skip spacer rows in the check
         if ($(this).hasClass('spacer-row')) {
+            // Update colspan for spacer rows to match header
+            $(this).find('td').attr('colspan', headerColumnCount);
             return; // continue to next iteration
         }
         
+        console.log('Row', index, 'columns:', rowColumnCount, 'should be', headerColumnCount);
+        
         if (rowColumnCount !== headerColumnCount) {
-            console.error('Row column count mismatch:', rowColumnCount, 'should be', headerColumnCount);
+            console.error('Row column count mismatch at row', index, ':', rowColumnCount, 'should be', headerColumnCount);
             allRowsValid = false;
             
             // Fix the row by adding missing columns or removing extra columns
             if (rowColumnCount < headerColumnCount) {
                 // Add missing columns
                 for (var i = rowColumnCount; i < headerColumnCount; i++) {
-                    $(this).append($('<td>').text(''));
+                    $(this).append($('<td>').addClass('date-column').text(''));
                 }
+                console.log('Added', (headerColumnCount - rowColumnCount), 'columns to row', index);
             } else if (rowColumnCount > headerColumnCount) {
                 // Remove extra columns
                 $(this).find('td').slice(headerColumnCount).remove();
+                console.log('Removed', (rowColumnCount - headerColumnCount), 'columns from row', index);
             }
         }
     });
@@ -1089,39 +1856,90 @@ function renderTable(data, startDate, endDate) {
         console.warn('Table has no data rows');
     }
     
-    try {
-        // Initialize DataTables with error handling and minimal configuration
-        var dataTable = $('#material-shortage-table').DataTable({
-            paging: false,
-            searching: false,
-            info: false,
-            ordering: false,
-            processing: true,
-            fixedHeader: true,
-            scrollX: true,
-            scrollY: '60vh',
-            scrollCollapse: true,
-            columnDefs: [{
-                defaultContent: '',
-                targets: '_all'
-            }],
-            language: {
-                emptyTable: 'No data available'
+    // Additional validation to ensure table structure is valid for DataTables
+    console.log('Performing additional validation on table structure...');
+    
+    // Check for non-TR elements in tbody
+    var nonTrElements = tbody.children().not('tr');
+    if (nonTrElements.length > 0) {
+        console.error('Found invalid elements in tbody:', nonTrElements.length);
+        // Remove invalid elements
+        nonTrElements.remove();
+        console.log('Removed invalid elements from tbody');
+    }
+    
+    // Check for empty rows or rows without cells
+    tbody.find('tr').each(function(index) {
+        // Skip spacer rows in this check
+        if ($(this).hasClass('spacer-row')) {
+            return;
+        }
+        
+        if ($(this).children().length === 0) {
+            console.error('Found empty row at index', index);
+            $(this).remove();
+            console.log('Removed empty row at index', index);
+        }
+    });
+    
+    // Ensure all cells are properly created as TD elements
+    tbody.find('tr').each(function(index) {
+        $(this).children().each(function(cellIndex) {
+            if (this.tagName.toLowerCase() !== 'td') {
+                console.error('Found non-TD element in row', index, 'cell', cellIndex);
+                // Replace with proper TD
+                var content = $(this).html();
+                var newTd = $('<td>').html(content).attr('class', $(this).attr('class'));
+                $(this).replaceWith(newTd);
+                console.log('Replaced non-TD element with proper TD in row', index, 'cell', cellIndex);
             }
         });
-        
-        console.log('DataTable initialized successfully');
-    } catch (error) {
-        console.error('Error initializing DataTable:', error);
-        $('#error-message').text('Error initializing table: ' + error.message).show();
-    }
+    });
+    
+    console.log('Skipping DataTables initialization, using basic table styling');
+    
+    // Apply basic Bootstrap styling to the table
+    $('#material-shortage-table').addClass('table table-bordered table-striped');
+    
+    // Add scrolling capability with CSS
+    $('#table-container').css({
+        'overflow-x': 'auto',
+        'max-height': '60vh',
+        'overflow-y': 'auto'
+    });
+    
+    // Make sure header cells have proper styling
+    $('#material-shortage-table thead th').addClass('text-center sticky-top bg-primary text-white');
+    
+    // Add zebra striping to rows
+    $('#material-shortage-table tbody tr:not(.spacer-row):even').addClass('table-light');
+    
+    // Add hover effect
+    $('#material-shortage-table tbody tr:not(.spacer-row)').hover(
+        function() { $(this).addClass('table-hover'); },
+        function() { $(this).removeClass('table-hover'); }
+    );
+    
+    // Make sure negative values are highlighted
+    $('.negative-value').css('color', 'red');
+    
+    // Hide loading indicator if any
+    $('.dataTables_processing').hide();
+    
+    console.log('Basic table styling applied successfully');
+    
+    // Show success message
+    toastr.success('Data loaded successfully');
+    
+    // Hide any error messages
+    $('#error-message').hide();
 }
 
 function exportToExcel() {
     var dateRange = $('#date-range').val().split(' to ');
     var startDate = dateRange[0];
     var endDate = dateRange[1];
-    var modelNo = $('#model-no').val();
+    var partNo = $('#part-no').val();
     var hClass = $('#h-class').val();
     var classVal = $('#class').val();
     var minusOnly = $('#minus-only').prop('checked');
@@ -1145,8 +1963,8 @@ function exportToExcel() {
     }));
 
     form.append($('<input>', {
-        'name': 'model_no',
-        'value': modelNo,
+        'name': 'part_no',
+        'value': partNo,
         'type': 'hidden'
     }));
 

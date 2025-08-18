@@ -100,7 +100,7 @@
                         <!-- Kolom total (1) -->
                         <th class="text-center">Total</th>
                         <!-- Kolom aksi (1) -->
-                        <th class="freeze-column-right text-center">Aksi</th>
+                        <th class="freeze-column-right text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>

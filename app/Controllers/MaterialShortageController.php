@@ -37,19 +37,19 @@ class MaterialShortageController extends BaseController
         
         $startDate = $request->getPost('start_date');
         $endDate = $request->getPost('end_date');
-        $modelNo = $request->getPost('model_no');
+        $partNo = $request->getPost('part_no');
         $hClass = $request->getPost('h_class');
         $class = $request->getPost('class');
         $minusOnly = $request->getPost('minus_only') === 'true';
         
-        // Pastikan model_no benar-benar kosong jika dikirim sebagai string kosong
-        if ($modelNo === '') {
-            $modelNo = null;
-            log_message('debug', "MATERIAL_SHORTAGE - Model_no kosong, diubah menjadi null");
+        // Pastikan part_no benar-benar kosong jika dikirim sebagai string kosong
+        if ($partNo === '') {
+            $partNo = null;
+            log_message('debug', "MATERIAL_SHORTAGE - Part_no kosong, diubah menjadi null");
         }
         
         // Log untuk debugging
-        log_message('debug', "MATERIAL_SHORTAGE - Parameters: Start={$startDate}, End={$endDate}, Model: {$modelNo}, H Class: {$hClass}, Class: {$class}, Minus Only: " . ($minusOnly ? 'true' : 'false'));
+        log_message('debug', "MATERIAL_SHORTAGE - Parameters: Start={$startDate}, End={$endDate}, Part: {$partNo}, H Class: {$hClass}, Class: {$class}, Minus Only: " . ($minusOnly ? 'true' : 'false'));
         
         // Validasi tanggal (frontend sudah mengirim format YYYY-MM-DD yang clean)
         if (!$startDate || !$endDate) {
@@ -74,7 +74,7 @@ class MaterialShortageController extends BaseController
             $data = $this->materialShortageModel->getMaterialShortageData(
                 $startDate, 
                 $endDate, 
-                $modelNo, 
+                $partNo, 
                 $hClass, 
                 $class, 
                 $minusOnly
@@ -96,6 +96,33 @@ class MaterialShortageController extends BaseController
         }
     }
 
+    public function getAvailableParts()
+    {
+        try {
+            $request = $this->request;
+            $search = $request->getGet('search');
+            $page = (int)$request->getGet('page') ?: 1;
+            $limit = 20; // Jumlah item per halaman
+            
+            log_message('debug', "MATERIAL_SHORTAGE - Getting parts with search={$search}, page={$page}");
+            
+            // Ambil data dengan pagination dan search
+            $result = $this->materialShortageModel->getAvailableParts($search, $page, $limit);
+            
+            return $this->response->setJSON([
+                'success' => true,
+                'parts' => $result['parts'],
+                'total_count' => $result['total_count']
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', "MATERIAL_SHORTAGE - Error getting parts: " . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error retrieving parts: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
     public function getAvailableModels()
     {
         try {
@@ -153,19 +180,19 @@ class MaterialShortageController extends BaseController
         
         $startDate = $request->getPost('start_date');
         $endDate = $request->getPost('end_date');
-        $modelNo = $request->getPost('model_no');
+        $partNo = $request->getPost('part_no');
         $hClass = $request->getPost('h_class');
         $class = $request->getPost('class');
         $minusOnly = $request->getPost('minus_only') === 'true';
         
-        log_message('debug', "MATERIAL_SHORTAGE_EXPORT - Parameters: Start Date: {$startDate}, End Date: {$endDate}, Model: {$modelNo}, H Class: {$hClass}, Class: {$class}, Minus Only: " . ($minusOnly ? 'true' : 'false'));
+        log_message('debug', "MATERIAL_SHORTAGE_EXPORT - Parameters: Start Date: {$startDate}, End Date: {$endDate}, Part: {$partNo}, H Class: {$hClass}, Class: {$class}, Minus Only: " . ($minusOnly ? 'true' : 'false'));
         
         try {
             // Ambil data dari model
             $data = $this->materialShortageModel->getMaterialShortageData(
                 $startDate, 
                 $endDate, 
-                $modelNo, 
+                $partNo, 
                 $hClass, 
                 $class, 
                 $minusOnly
