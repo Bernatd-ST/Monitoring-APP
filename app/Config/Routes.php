@@ -57,6 +57,12 @@ $routes->group('material-shortage', ['filter' => 'auth'], function ($routes) {
     $routes->get('classes', 'MaterialShortageController::getAvailableClasses');
 });
 
+// Test routes untuk Material Shortage debugging
+$routes->get('test/material-shortage', 'MaterialShortageTestController::testConsole');
+$routes->get('test/material-shortage-json', 'MaterialShortageTestController::testHardcode');
+$routes->get('test/material-shortage-api', 'MaterialShortageTestController::testApiFormat');
+$routes->get('test/material-shortage-main', 'MaterialShortageTestController::testMainModel');
+
 // Material Control routes
 $routes->group('admin/material', ['filter' => 'auth'], function ($routes) {
     $routes->get('/', 'MaterialController::index');

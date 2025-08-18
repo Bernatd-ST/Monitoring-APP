@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Models\MaterialShortageModel;
+use App\Models\MaterialShortageModelFixed;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -15,7 +15,7 @@ class MaterialShortageController extends BaseController
 
     public function __construct()
     {
-        $this->materialShortageModel = new MaterialShortageModel();
+        $this->materialShortageModel = new MaterialShortageModelFixed();
     }
 
     public function index()
@@ -48,8 +48,26 @@ class MaterialShortageController extends BaseController
             log_message('debug', "MATERIAL_SHORTAGE - Model_no kosong, diubah menjadi null");
         }
         
-        // Tambahan log untuk debugging
-        log_message('debug', "MATERIAL_SHORTAGE - Parameters: Start Date: {$startDate}, End Date: {$endDate}, Model: {$modelNo}, H Class: {$hClass}, Class: {$class}, Minus Only: " . ($minusOnly ? 'true' : 'false'));
+        // Log untuk debugging
+        log_message('debug', "MATERIAL_SHORTAGE - Parameters: Start={$startDate}, End={$endDate}, Model: {$modelNo}, H Class: {$hClass}, Class: {$class}, Minus Only: " . ($minusOnly ? 'true' : 'false'));
+        
+        // Validasi tanggal (frontend sudah mengirim format YYYY-MM-DD yang clean)
+        if (!$startDate || !$endDate) {
+            log_message('error', "MATERIAL_SHORTAGE - Missing dates: startDate={$startDate}, endDate={$endDate}");
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Please provide valid start and end dates.'
+            ]);
+        }
+        
+        // Validasi format tanggal YYYY-MM-DD
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate)) {
+            log_message('error', "MATERIAL_SHORTAGE - Invalid date format: startDate={$startDate}, endDate={$endDate}");
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Invalid date format. Please use YYYY-MM-DD format.'
+            ]);
+        }
 
         try {
             // Ambil data dari model
