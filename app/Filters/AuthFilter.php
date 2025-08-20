@@ -31,6 +31,10 @@ class AuthFilter implements FilterInterface
             'admin/dashboard',
             'admin/dashboard-analytics',
             'admin/sales/sales',
+            'admin/sales/get',    
+            'admin/sales/add',    
+            'admin/sales/update', 
+            'admin/sales/delete', 
             'admin/sales/actual',
             'admin/report',
             'material-shortage'

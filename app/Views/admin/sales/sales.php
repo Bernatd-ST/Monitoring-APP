@@ -34,7 +34,7 @@
     <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
         <h5 class="m-0 font-weight-bold">Data Sales</h5>
         <div>
-            <?php if(session()->get('user_role') === 'admin'): ?>
+            <?php if(session()->get('user_role') !== 'admin'): ?>
             <button type="button" class="btn btn-sm btn-light me-2" id="add-btn">
                 <i class="fas fa-plus"></i>
                 Tambah Data
@@ -92,7 +92,7 @@
                             <th class="date-column"><?= $i ?></th>
                         <?php endfor; ?>
                         <th>Total</th>
-                        <?php if(session()->get('user_role') === 'admin'): ?>
+                        <?php if(session()->get('user_role') !== 'admin'): ?>
                         <th class="freeze-column-right text-center">Actions</th>
                         <?php endif; ?>
                     </tr>
@@ -110,7 +110,7 @@
                                     <td><?= esc($row["schedule_{$i}"]) ?? 0 ?></td>
                                 <?php endfor; ?>
                                 <td><strong><?= esc($row['total']) ?></strong></td>
-                                <?php if(session()->get('user_role') === 'admin'): ?>
+                                <?php if(session()->get('user_role') !== 'admin'): ?>
                                 <td>
                                     <div class="btn-group">
                                         <button type="button" class="btn btn-sm btn-info view-btn me-1" data-id="<?= $row['id'] ?>" title="Lihat Detail">
