@@ -7,19 +7,21 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/css/auth.css">
+    <link rel="shortcut icon" type="image/png" href="/image/icon.ico">
 </head>
 <body>
     <div class="main-container">
-        <div class="branding-side d-none d-lg-flex">
-            <div>
-                <h1><i class="fas fa-user-plus me-2"></i>Create Your Account</h1>
-                <p>Join our platform to start monitoring your stock efficiently.</p>
+        <div class="auth-container">
+            <div class="branding-side">
+                <div class="branding-overlay">
+                    <h1><i class="fas fa-user-plus me-2"></i>Create Your Account</h1>
+                    <p>Join our platform to start monitoring your stock efficiently.</p>
+                </div>
             </div>
-        </div>
-        <div class="form-side">
-            <div class="login-card">
-                <h2>User Registration</h2>
-                <p class="form-text text-muted">Fill in the details to create an account.</p>
+            <div class="form-side">
+                <div class="login-card">
+                    <h2>User Registration</h2>
+                    <p class="form-text text-muted">Fill in the details to create an account.</p>
 
                 <?php if(isset($validation)): ?>
                     <div class="alert alert-danger"><?= $validation->listErrors() ?></div>

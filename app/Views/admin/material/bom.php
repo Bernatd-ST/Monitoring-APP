@@ -175,12 +175,12 @@
 
 <?= $this->section('page_buttons') ?>
     <div class="btn-toolbar mb-2 mb-md-0">
-        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importModal">
-            <i class="fas fa-file-excel"></i>
+        <button type="button" class="btn btn-sm btn-outline-primary mr-2" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="fas fa-file-import"></i>
             Import Excel
         </button>
         <a href="<?= base_url('admin/material/export-bom') ?>" class="btn btn-sm btn-outline-success ms-2">
-            <i class="fas fa-download"></i>
+            <i class="fas fa-file-download"></i>
             Export Excel
         </a>
     </div>

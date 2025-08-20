@@ -7,7 +7,7 @@
             Import Excel
         </button>
         <button type="button" class="btn btn-sm btn-outline-success me-2" id="exportExcelBtn">
-            <i class="fas fa-file-export"></i>
+            <i class="fas fa-file-download"></i>
             Export Excel
         </button>
     </div>

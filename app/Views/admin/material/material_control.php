@@ -141,12 +141,12 @@
 
 <?= $this->section('page_buttons') ?>
     <div class="btn-toolbar mb-2 mb-md-0">
-        <button type="button" class="btn btn-sm btn-outline-success mr-2" data-bs-toggle="modal" data-bs-target="#importModal">
+        <button type="button" class="btn btn-sm btn-outline-primary mr-2" data-bs-toggle="modal" data-bs-target="#importModal">
             <i class="fas fa-file-import"></i>
             Import Excel
         </button>
-        <a href="<?= base_url('admin/material/export-material') ?>" class="btn btn-sm btn-outline-info mr-2">
-            <i class="fas fa-download"></i>
+        <a href="<?= base_url('admin/material/export-material') ?>" class="btn btn-sm btn-outline-success ms-2">
+            <i class="fas fa-file-download"></i>
             Export Excel
         </a>
     </div>
@@ -160,8 +160,8 @@
         <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
             <h5 class="m-0 font-weight-bold">Stock Material</h5>
             <div>
-                <button id="addMaterialBtn" class="btn btn-sm btn-light mr-2" onclick="window.location.href='<?= base_url('admin/material/add-material') ?>'">
-                    <i class="fas fa-plus"></i> Add
+                <button id="addMaterialBtn" class="btn btn-sm btn-light mr-2" data-bs-toggle="modal" data-bs-target="#addModal">
+                    <i class="fas fa-plus"></i> Tambah Material
                 </button>
                 <button id="toggleFilter" class="btn btn-sm btn-light">
                     <i class="fas fa-filter"></i> Filter
@@ -432,6 +432,57 @@
     </div>
 </div>
 
+<!-- Add Material Modal -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">Add Material</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addMaterialForm">
+                <?= csrf_field() ?>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="add_ckd" class="form-label">CKD <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="add_ckd" name="ckd" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="add_period" class="form-label">Period <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="add_period" name="period" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="add_part_no" class="form-label">Part No <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="add_part_no" name="part_no" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="add_description" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="add_description" name="description">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="add_class" class="form-label">Class <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="add_class" name="class" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="add_beginning" class="form-label">Beginning</label>
+                            <input type="text" class="form-control" id="add_beginning" name="beginning">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="save-material">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -627,6 +678,58 @@ $(document).ready(function() {
             error: function(xhr, status, error) {
                 console.error('AJAX Error:', error);
                 toastr.error('An error occurred while updating material data');
+            }
+        });
+    });
+
+    $('#addMaterialForm').submit(function(e) {
+        e.preventDefault();
+        
+        // Log form data untuk debugging
+        console.log('Form data:', $(this).serializeArray());
+        
+        const formData = $(this).serialize();
+        
+        $.ajax({
+            url: '<?= base_url('admin/material/save-material') ?>',
+            type: 'POST',
+            dataType: 'json',
+            data: formData,
+            beforeSend: function() {
+                // Disable button to prevent multiple submissions
+                $('#save-material').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+            },
+            success: function(response) {
+                console.log('Server response:', response);
+                
+                // Re-enable button
+                $('#save-material').prop('disabled', false).html('Save');
+                
+                if (response.status === 'success' || response.success === true) {
+                    // Hide modal
+                    $('#addModal').modal('hide');
+                    
+                    // Show success notification
+                    toastr.success(response.message || 'Material data added successfully');
+                    
+                    // Reload page after a short delay
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    // Show error notification
+                    toastr.error(response.message || 'Failed to add material data');
+                }
+            },
+            error: function(xhr, status, error) {
+                // Re-enable button
+                $('#save-material').prop('disabled', false).html('Save');
+                
+                // Log error details
+                console.error('AJAX Error:', xhr.responseText);
+                
+                // Show error notification
+                toastr.error('An error occurred while saving material data: ' + error);
             }
         });
     });

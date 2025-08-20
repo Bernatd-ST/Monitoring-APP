@@ -6,7 +6,13 @@ if (typeof base_url === 'undefined') {
 }
 console.log('Actual.js menggunakan base_url:', base_url);
 
+// Definisikan table sebagai variabel global
+var table;
+
 $(document).ready(function() {
+    console.log('DEBUG: Document ready event fired');
+    console.log('DEBUG: Variabel table dalam document ready:', typeof table, table);
+    
     // Toggle filter section dengan animasi yang lebih smooth
     $('#toggle-filters').click(function() {
         $('#filter-section').slideToggle(150, 'linear');
@@ -18,20 +24,20 @@ $(document).ready(function() {
         $('#actualModalLabel').text('Tambah Data Actual Production');
         $('#actualModal').modal('show');
     });
+    // Hitung jumlah kolom di thead
+    var headerColumnCount = $('#actual-table thead tr:first th').length;
+    console.log('Header column count:', headerColumnCount);
     
-    // Inisialisasi DataTable dengan cara yang lebih langsung
-    $(document).ready(function() {
-        // Hitung jumlah kolom di thead
-        var headerColumnCount = $('#actual-table thead tr:first th').length;
-        console.log('Header column count:', headerColumnCount);
-        
-        // Hapus instance DataTable yang mungkin sudah ada
-        if ($.fn.DataTable.isDataTable('#actual-table')) {
-            $('#actual-table').DataTable().destroy();
-        }
-        
-        // Inisialisasi DataTable dengan konfigurasi yang lebih sederhana
-        var table = $('#actual-table').DataTable({
+    // Hapus instance DataTable yang mungkin sudah ada
+    if ($.fn.DataTable.isDataTable('#actual-table')) {
+        $('#actual-table').DataTable().destroy();
+    }
+    
+    console.log('DEBUG: Sebelum inisialisasi DataTable');
+    console.log('DEBUG: Variabel table sebelum inisialisasi:', typeof table);
+
+    // Inisialisasi DataTable dengan konfigurasi yang lebih sederhana
+    table = $('#actual-table').DataTable({
             // Nonaktifkan fitur yang mungkin menyebabkan masalah column count
             processing: true,
             scrollX: true,
@@ -172,7 +178,12 @@ $(document).ready(function() {
     });
 
     // --- FUNGSI FILTER --- 
-    $('#apply-filter').click(applyCustomFilters);
+    // Filter handling
+    $('#apply-filter').click(function() {
+        console.log('DEBUG: Tombol apply-filter diklik');
+        console.log('DEBUG: Variabel table sebelum memanggil applyCustomFilters:', typeof table, table);
+        applyCustomFilters();
+    });
 
     $('#reset-filter').click(function() {
         $('#filter-model').val('').trigger('change');
@@ -213,24 +224,43 @@ $(document).ready(function() {
     });
 
     function applyCustomFilters() {
+        console.log('Applying custom filters...');
+        console.log('DEBUG: Variabel table dalam applyCustomFilters:', typeof table, table);
         var modelFilter = $('#filter-model').val();
         var classFilter = $('#filter-class').val();
         var dateStart = $('#filter-date-start').val();
         var dateEnd = $('#filter-date-end').val();
+
+        console.log('Filter values:', { modelFilter, classFilter, dateStart, dateEnd });
 
         // Hapus filter sebelumnya jika ada
         if($.fn.dataTable.ext.search.length > 0){
             $.fn.dataTable.ext.search.pop();
         }
         
+        // Periksa apakah table terdefinisi
+        if (typeof table === 'undefined' || table === null) {
+            console.error('ERROR: Variabel table tidak terdefinisi atau null!');
+            return;
+        }
+        
+        // Reset semua filter terlebih dahulu
         table.search('').columns().search('').draw();
 
         // Terapkan filter model & class
-        if (modelFilter) table.column(0).search('^' + $.fn.dataTable.util.escapeRegex(modelFilter) + '$', true, false);
-        if (classFilter) table.column(1).search('^' + $.fn.dataTable.util.escapeRegex(classFilter) + '$', true, false);
+        if (modelFilter) {
+            console.log('Applying model filter:', modelFilter);
+            table.column(0).search('^' + $.fn.dataTable.util.escapeRegex(modelFilter) + '$', true, false);
+        }
+        
+        if (classFilter) {
+            console.log('Applying class filter:', classFilter);
+            table.column(1).search('^' + $.fn.dataTable.util.escapeRegex(classFilter) + '$', true, false);
+        }
 
         // Terapkan filter rentang tanggal
         if (dateStart && dateEnd) {
+            console.log('Applying date range filter:', dateStart, 'to', dateEnd);
             var startDay = parseInt(dateStart);
             var endDay = parseInt(dateEnd);
 
@@ -244,7 +274,9 @@ $(document).ready(function() {
                 return false;
             });
         }
-
+        
+        // Penting: Panggil draw() untuk menerapkan filter
+        console.log('Drawing table with filters applied');
         table.draw();
     }
 
@@ -637,4 +669,4 @@ $(document).ready(function() {
             alert(message);
         }
     }
-});
+

@@ -2,55 +2,128 @@
 :root {
     --sidebar-width: 250px;
     --sidebar-collapsed-width: 70px;
-    --sidebar-gradient-start: #2c3e50;
-    --sidebar-gradient-end: #1a252f;
-    --sidebar-active-item: #3498db;
-    --sidebar-hover-bg: rgba(255, 255, 255, 0.1);
-    --sidebar-text: rgba(255, 255, 255, 0.8);
-    --sidebar-text-hover: #ffffff;
+    --sidebar-gradient-start: #eeeff4;
+    --sidebar-gradient-mid: #f2f3f6;
+    --sidebar-gradient-end: #ebeef1;
+    --sidebar-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    --sidebar-border: rgba(255, 255, 255, 0.1);
+    --header-bg: #fff;
+    --header-text: #3a3b45;
+    --header-shadow: 0 0.15rem 1rem 0 rgba(58, 59, 69, 0.075);
     --transition-speed: 0.3s;
+    --font-family: 'Nunito', sans-serif;
+    --header-height: 60px; /* Fixed header height */
 }
 
 /* Main sidebar container */
 .sidebar {
     position: fixed;
-    top: 0;
+    top: var(--header-height); /* Behind the navbar */
     bottom: 0;
     left: 0;
-    z-index: 100;
-    padding: 48px 0 0;
+    z-index: 100; /* Behind the navbar */
+    padding: 0;
     width: var(--sidebar-width);
-    background: linear-gradient(135deg, var(--sidebar-gradient-start), var(--sidebar-gradient-end));
-    box-shadow: 3px 0 10px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, var(--sidebar-gradient-start), var(--sidebar-gradient-mid), var(--sidebar-gradient-end));
+    box-shadow: var(--sidebar-shadow);
     transition: all var(--transition-speed) ease;
     overflow-x: hidden;
+    border-right: 1px solid var(--sidebar-border);
+    font-family: var(--font-family);
 }
 
-/* Sidebar when collapsed */
-.sidebar.collapsed {
-    width: var(--sidebar-collapsed-width);
-}
-
-/* Adjust main content when sidebar is collapsed */
-.sidebar.collapsed + .main-content-wrapper {
-    margin-left: var(--sidebar-collapsed-width);
-}
-
-/* Main content wrapper */
+/* Main content area */
 .main-content-wrapper {
     margin-left: var(--sidebar-width);
-    transition: margin var(--transition-speed) ease;
+    padding: 1.5rem;
+    transition: margin-left var(--transition-speed) ease;
+    padding-top: var(--header-height); /* Account for fixed header using variable */
+}
+
+/* Admin welcome section */
+.admin-welcome {
+    padding: 1.5rem 1rem;
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.1);
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all var(--transition-speed) ease;
+    margin-top: 0; /* Reset margin as we've added padding to sidebar */
+}
+
+.admin-info {
+    padding: 0.75rem 1rem;
+    background: rgba(83, 119, 152, 0.1);
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--sidebar-border);
+    margin-top: 0;
+}
+
+.admin-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #9cbdf2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    color: #4e73df;
+    font-size: 1.5rem;
+}
+
+.welcome-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.welcome-text .small {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.welcome-text .fw-bold {
+    font-weight: 600;
+}
+
+.admin-info .welcome-text {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.admin-info .admin-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.sidebar.collapsed .admin-welcome {
+    padding: 1rem 0;
+    justify-content: center;
+}
+
+.sidebar.collapsed .admin-welcome .admin-info {
+    display: none;
+}
+
+.sidebar.collapsed .admin-welcome .admin-avatar {
+    margin-right: 0;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
 }
 
 /* Sidebar sticky container */
 .sidebar-sticky {
     position: relative;
-    height: calc(100vh - 48px);
+    height: calc(100vh - 130px); /* Adjusted for welcome section */
     padding-top: 0.5rem;
     overflow-x: hidden;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    margin-top: 0;
 }
 
 /* Scrollbar styling */
@@ -69,79 +142,112 @@
 
 /* Navigation items */
 .sidebar .nav-link {
-    padding: 0.75rem 1rem;
+    padding: 0.85rem 1.25rem;
     color: var(--sidebar-text);
     font-weight: 500;
-    border-left: 3px solid transparent;
+    border-left: 4px solid transparent;
     transition: all var(--transition-speed) ease;
     display: flex;
     align-items: center;
+    letter-spacing: 0.03em;
+    font-size: 0.95rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar .nav-link:hover {
     color: var(--sidebar-text-hover);
     background-color: var(--sidebar-hover-bg);
-    border-left: 3px solid rgba(52, 152, 219, 0.5);
+    border-left: 4px solid rgba(78, 115, 223, 0.5);
+    transform: translateX(3px);
 }
 
 .sidebar .nav-link.active {
     color: var(--sidebar-text-hover);
-    border-left: 3px solid var(--sidebar-active-item);
-    background-color: rgba(52, 152, 219, 0.2);
+    border-left: 4px solid var(--sidebar-active-item);
+    background-color: rgba(78, 115, 223, 0.1);
+    font-weight: 600;
 }
 
 /* Icons in sidebar */
 .sidebar .nav-link i.fa-fw {
-    margin-right: 10px;
+    margin-right: 12px;
     width: 20px;
     text-align: center;
-    transition: margin var(--transition-speed) ease;
+    transition: all var(--transition-speed) ease;
+    opacity: 0.8;
 }
 
-/* When sidebar is collapsed, adjust icon margin */
-.sidebar.collapsed .nav-link i.fa-fw {
-    margin-right: 0;
-    font-size: 1.2rem;
-}
-
-/* Hide text when sidebar is collapsed */
-.sidebar.collapsed .nav-link span,
-.sidebar.collapsed .nav-link i.fa-chevron-down,
-.sidebar.collapsed .collapse {
-    display: none;
+.sidebar .nav-link:hover i.fa-fw {
+    opacity: 1;
+    transform: scale(1.1);
 }
 
 /* Submenu styling */
 .sidebar .collapse {
     transition: all var(--transition-speed) ease;
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 .sidebar .collapse .nav-link {
-    padding-left: 3rem;
+    padding-left: 3.2rem;
     font-size: 0.9rem;
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
 }
 
-/* Toggle button */
-.sidebar-toggle {
+/* Header styles */
+.header {
     position: fixed;
-    bottom: 20px;
-    left: var(--sidebar-width);
-    width: 40px;
-    height: 40px;
-    background-color: var(--sidebar-active-item);
-    color: white;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: var(--header-height);
+    background: var(--header-bg);
+    color: var(--header-text);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1030; /* Higher than sidebar */
+    box-shadow: var(--header-shadow);
+    transition: all var(--transition-speed) ease;
+}
+
+/* Navbar brand positioning */
+.navbar-brand {
+    width: 200px;
+    height: 200px;
+    padding-left: 1rem;
+    z-index: 1040; /* Higher than header and sidebar */
+    width: var(--sidebar-width);
+    text-align: left;
+}
+
+/* Sidebar toggle button */
+.sidebar-toggle {
+    position: absolute;
+    top: 70px;
+    right: -15px;
+    width: 30px;
+    height: 30px;
+    background: white;
     border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    z-index: 101;
-    transition: left var(--transition-speed) ease;
+    z-index: 1031;
+    transition: all var(--transition-speed) ease;
+    color: var(--sidebar-gradient-start);
+    border: none;
+    outline: none;
+    padding: 0;
 }
 
 .sidebar-toggle:hover {
-    background-color: #2980b9;
+    background-color: #224abe;
+    transform: scale(1.05);
 }
 
 .sidebar.collapsed + .main-content-wrapper .sidebar-toggle {
@@ -150,18 +256,19 @@
 
 /* Brand/logo area */
 .sidebar-brand {
-    padding: 1rem;
+    padding: 1.5rem 1rem;
     color: white;
     font-size: 1.2rem;
     font-weight: bold;
     display: flex;
     align-items: center;
-    height: 48px;
-    background: rgba(0, 0, 0, 0.2);
+    height: 60px;
+    background: rgba(191, 55, 55, 0.15);
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
+    border-bottom: 1px solid var(--sidebar-border);
 }
 
 /* Responsive adjustments */
@@ -182,6 +289,12 @@
     .sidebar-toggle {
         left: 20px;
         bottom: 20px;
+        background-color: var(--sidebar-active-item);
+        opacity: 0.9;
+    }
+    
+    .sidebar-toggle:hover {
+        opacity: 1;
     }
 }
 

@@ -7,6 +7,8 @@
     <title><?= esc($title); ?> - Monitoring App</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts - Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
@@ -20,26 +22,39 @@
     <link rel="stylesheet" href="/css/Dashboard/dashboard.css">
     <link rel="stylesheet" href="/css/ppic/style.css">
     <link rel="stylesheet" href="/css/sidebar-custom.css">
+    <link rel="shortcut icon" type="image/png" href="/image/icon.ico">
     
 </head>
 <body>
 
-<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#">Monitoring App</a>
-    <button class="navbar-toggler d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="navbar-nav">
-        <div class="nav-item text-nowrap">
-            <a class="nav-link px-3" href="/logout">Sign out</a>
+<header class="navbar navbar-light sticky-top bg-white flex-md-nowrap p-0 shadow-sm border-bottom header">
+    <div class="container-fluid px-0">
+        <p class="ms-3" style="margin-top: 0; margin-bottom: 0; padding-bottom: 10px; font-weight: bold; font-size: 1.2rem;">Monitoring App</p>
+        <div class="navbar-nav ms-auto">
+            <div class="nav-item text-nowrap">
+                <a class="nav-link px-3 text-dark" href="/logout"><i class="fas fa-sign-out-alt me-1"></i> Sign out</a>
+            </div>
         </div>
     </div>
 </header>
 
 <div class="container-fluid">
     <div class="row">
-        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-            <div class="position-sticky pt-3">
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar">
+    <div class="position-sticky pt-0 mt-0">
+        <!-- Admin info section - positioned right below Monitoring App -->
+        <div class="admin-info mb-3 px-3 py-2" style="margin-top: 0;">
+            <div class="d-flex align-items-center">
+                <div class="admin-avatar me-2">
+                    <i class="fas fa-user-circle fa-2x"></i>
+                </div>
+                <div class="welcome-text">
+                    <div class="small">Welcome</div>
+                    <div class="fw-bold"><?= session()->get('user_role') === 'admin' ? 'Admin' : 'User' ?></div>
+                </div>
+            </div>
+        </div>    
+            <div class="sidebar-sticky">
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link <?= (uri_string() == 'admin/dashboard') ? 'active' : '' ?>" href="/admin/dashboard">
@@ -49,11 +64,11 @@
                     </li>
                     
                     <li class="nav-item">
-                        <a class="nav-link <?= (strpos(uri_string(), 'admin/sales/sales') === 0) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#salesSubmenu" role="button" aria-expanded="<?= (strpos(uri_string(), 'admin/sales/sales') === 0) ? 'true' : 'false' ?>" aria-controls="salesSubmenu">
+                        <a class="nav-link <?= (strpos(uri_string(), 'admin/sales/') === 0) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#salesSubmenu" role="button" aria-expanded="<?= (strpos(uri_string(), 'admin/sales/') === 0) ? 'true' : 'false' ?>" aria-controls="salesSubmenu">
                             <i class="fas fa-industry fa-fw"></i>
                             SALES <i class="fas fa-chevron-down ms-1"></i>
                         </a>
-                        <div class="collapse <?= (strpos(uri_string(), 'admin/sales/sales') === 0) ? 'show' : '' ?>" id="salesSubmenu">
+                        <div class="collapse <?= (strpos(uri_string(), 'admin/sales/') === 0) ? 'show' : '' ?>" id="salesSubmenu">
                             <ul class="nav flex-column ps-3">
                                 <li class="nav-item">
                                     <a class="nav-link <?= (uri_string() == 'admin/sales/sales') ? 'active' : '' ?>" href="/admin/sales/sales">
@@ -70,6 +85,7 @@
                             </ul>
                         </div>
                     </li>
+                    <?php if(session()->get('user_role') === 'admin'): ?>
                     <li class="nav-item">
                         <a class="nav-link <?= (strpos(uri_string(), 'admin/ppic') === 0) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#ppicSubmenu" role="button" aria-expanded="<?= (strpos(uri_string(), 'admin/ppic') === 0) ? 'true' : 'false' ?>" aria-controls="ppicSubmenu">
                             <i class="fas fa-industry fa-fw"></i>
@@ -104,6 +120,8 @@
                             </ul>
                         </div>
                     </li>
+                    <?php endif; ?>
+                    <?php if(session()->get('user_role') === 'admin'): ?>
                     <li class="nav-item">
                         <a class="nav-link <?= (strpos(uri_string(), 'admin/material') === 0) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#materialSubmenu" role="button" aria-expanded="<?= (strpos(uri_string(), 'admin/material') === 0) ? 'true' : 'false' ?>" aria-controls="materialSubmenu">
                             <i class="fas fa-box-open fa-fw"></i>
@@ -132,12 +150,14 @@
                             </ul>
                         </div>
                     </li>
+                    <?php endif; ?>
                     <li class="nav-item">
-                        <a class="nav-link <?= (strpos(uri_string(), 'admin/report') === 0) ? 'active' : '' ?>" data-bs-toggle="collapse" href="#reportSubmenu" role="button" aria-expanded="<?= (strpos(uri_string(), 'admin/report') === 0) ? 'true' : 'false' ?>" aria-controls="reportSubmenu">
+                        <a class="nav-link <?= (strpos(uri_string(), 'admin/report') === 0 || strpos(uri_string(), 'material-shortage') === 0) ? 'active' : '' ?>" 
+                        data-bs-toggle="collapse" href="#reportSubmenu" role="button" aria-expanded="<?= (strpos(uri_string(), 'admin/report') === 0 || strpos(uri_string(), 'material-shortage') === 0) ? 'true' : 'false' ?>" aria-controls="reportSubmenu">
                             <i class="fas fa-file-alt fa-fw"></i>
                             Report <i class="fas fa-chevron-down ms-1"></i>
                         </a>
-                        <div class="collapse <?= (strpos(uri_string(), 'admin/report') === 0) ? 'show' : '' ?>" id="reportSubmenu">
+                        <div class="collapse <?= (strpos(uri_string(), 'admin/report') === 0 || strpos(uri_string(), 'material-shortage') === 0) ? 'show' : '' ?>" id="reportSubmenu">
                             <ul class="nav flex-column ps-3">
                                 <li class="nav-item">
                                     <a class="nav-link <?= (uri_string() == 'admin/report/delivery-shortage') ? 'active' : '' ?>" href="/admin/report/delivery-shortage">
@@ -146,7 +166,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link <?= (uri_string() == 'material-shortage') ? 'active' : '' ?>" href="/material-shortage">
+                                    <a class="nav-link <?= (uri_string() == 'material-shortage' || uri_string() == 'admin/report/material-shortage') ? 'active' : '' ?>" href="/material-shortage">
                                         <i class="fas fa-boxes fa-fw"></i>
                                         Material Shortage
                                     </a>
@@ -158,12 +178,6 @@
             </div>
         </nav>
 
-        <!-- Sidebar Toggle Button -->
-        <div class="sidebar-toggle" id="sidebarToggle">
-            <i class="fas fa-chevron-left"></i>
-        </div>
-        
-        <!-- Main Content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content-wrapper">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2"><?= esc($title ?? 'Page'); ?></h1>
@@ -249,19 +263,7 @@ $(document).ready(function() {
 <!-- Custom Sidebar Script -->
 <script>
 $(document).ready(function() {
-    // Sidebar toggle functionality
-    $('#sidebarToggle').on('click', function() {
-        $('#sidebarMenu').toggleClass('collapsed');
-        
-        // Change icon direction
-        if ($('#sidebarMenu').hasClass('collapsed')) {
-            $(this).find('i').removeClass('fa-chevron-left').addClass('fa-chevron-right');
-        } else {
-            $(this).find('i').removeClass('fa-chevron-right').addClass('fa-chevron-left');
-        }
-    });
-    
-    // Add data-title attributes for tooltips when collapsed
+    // Add data-title attributes for tooltips
     $('.nav-item').each(function() {
         var linkText = $(this).find('> .nav-link').text().trim();
         $(this).attr('data-title', linkText);

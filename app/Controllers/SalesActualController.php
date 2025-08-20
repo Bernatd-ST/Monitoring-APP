@@ -129,6 +129,7 @@ class SalesActualController extends BaseController
     public function upload()
     {
         $file = $this->request->getFile('excel_file');
+        $actualSalesModel = new ActualSalesModel();
         $log_path = WRITEPATH . 'logs/actual_sales_import_' . date('Y-m-d_H-i-s') . '.log';
         file_put_contents($log_path, "Starting import process at " . date('Y-m-d H:i:s') . "\n");
 

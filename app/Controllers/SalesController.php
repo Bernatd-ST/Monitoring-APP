@@ -3,11 +3,19 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
-use App\Models\SalesModel; // <-- Tambahkan ini
-use PhpOffice\PhpSpreadsheet\Reader\Xlsx; // <-- Tambahkan ini
+use App\Models\SalesModel;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx as WriterXlsx;
 
 class SalesController extends BaseController
 {
+    protected $salesModel;
+    
+    public function __construct()
+    {
+        $this->salesModel = new SalesModel();
+    }
     public function index()
     {
         $salesModel = new SalesModel();
@@ -37,6 +45,248 @@ class SalesController extends BaseController
             'model_list' => $data['model_list'],
             'class_list' => $data['class_list']
         ]);
+    }
+    
+    public function add()
+    {
+        if ($this->request->isAJAX()) {
+            // Validasi input
+            $rules = [
+                'model_no' => 'required',
+                'class' => 'required'
+            ];
+            
+            if (!$this->validate($rules)) {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'Validasi gagal: ' . implode(', ', $this->validator->getErrors())
+                ]);
+            }
+            
+            // Siapkan data untuk disimpan
+            $data = [
+                'model_no' => $this->request->getPost('model_no'),
+                'class' => $this->request->getPost('class')
+            ];
+            
+            // Tambahkan data schedule
+            $total = 0;
+            for ($i = 1; $i <= 31; $i++) {
+                $value = (int)$this->request->getPost("schedule_{$i}") ?? 0;
+                $data["schedule_{$i}"] = $value;
+                $total += $value;
+            }
+            
+            // Tambahkan total
+            $data['total'] = $total;
+            
+            // Simpan data
+            if ($this->salesModel->insert($data)) {
+                return $this->response->setJSON([
+                    'status' => true,
+                    'message' => 'Data berhasil ditambahkan'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'Gagal menambahkan data'
+                ]);
+            }
+        } else {
+            return $this->response->setStatusCode(403)->setJSON([
+                'status' => false,
+                'message' => 'Akses ditolak'
+            ]);
+        }
+    }
+    
+    public function get($id = null)
+    {
+        if ($this->request->isAJAX()) {
+            if ($id === null) {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'ID tidak ditemukan'
+                ]);
+            }
+            
+            $data = $this->salesModel->find($id);
+            
+            if ($data) {
+                return $this->response->setJSON([
+                    'status' => true,
+                    'data' => $data
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'Data tidak ditemukan'
+                ]);
+            }
+        } else {
+            return $this->response->setStatusCode(403)->setJSON([
+                'status' => false,
+                'message' => 'Akses ditolak'
+            ]);
+        }
+    }
+    
+    public function update()
+    {
+        if ($this->request->isAJAX()) {
+            $id = $this->request->getPost('id');
+            
+            if (!$id) {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'ID tidak ditemukan'
+                ]);
+            }
+            
+            // Validasi input
+            $rules = [
+                'model_no' => 'required',
+                'class' => 'required'
+            ];
+            
+            if (!$this->validate($rules)) {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'Validasi gagal: ' . implode(', ', $this->validator->getErrors())
+                ]);
+            }
+            
+            // Siapkan data untuk diupdate
+            $data = [
+                'model_no' => $this->request->getPost('model_no'),
+                'class' => $this->request->getPost('class')
+            ];
+            
+            // Update data schedule
+            $total = 0;
+            for ($i = 1; $i <= 31; $i++) {
+                $value = (int)$this->request->getPost("schedule_{$i}") ?? 0;
+                $data["schedule_{$i}"] = $value;
+                $total += $value;
+            }
+            
+            // Update total
+            $data['total'] = $total;
+            
+            // Update data
+            if ($this->salesModel->update($id, $data)) {
+                return $this->response->setJSON([
+                    'status' => true,
+                    'message' => 'Data berhasil diperbarui'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'Gagal memperbarui data'
+                ]);
+            }
+        } else {
+            return $this->response->setStatusCode(403)->setJSON([
+                'status' => false,
+                'message' => 'Akses ditolak'
+            ]);
+        }
+    }
+    
+    public function delete($id = null)
+    {
+        if ($this->request->isAJAX()) {
+            if ($id === null) {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'ID tidak ditemukan'
+                ]);
+            }
+            
+            if ($this->salesModel->delete($id)) {
+                return $this->response->setJSON([
+                    'status' => true,
+                    'message' => 'Data berhasil dihapus'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'status' => false,
+                    'message' => 'Gagal menghapus data'
+                ]);
+            }
+        } else {
+            return $this->response->setStatusCode(403)->setJSON([
+                'status' => false,
+                'message' => 'Akses ditolak'
+            ]);
+        }
+    }
+    
+    public function export()
+    {
+        // Ambil semua data sales
+        $data = $this->salesModel->findAll();
+        
+        // Buat spreadsheet baru
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Set judul kolom
+        $sheet->setCellValue('A1', 'Model No');
+        $sheet->setCellValue('B1', 'Class');
+        
+        // Set header tanggal (1-31)
+        $col = 'C';
+        for ($i = 1; $i <= 31; $i++) {
+            $sheet->setCellValue($col . '1', $i);
+            $col++;
+        }
+        
+        // Set header total
+        $sheet->setCellValue('AH1', 'Total');
+        
+        // Style header
+        $lastCol = 'AH';
+        $sheet->getStyle('A1:' . $lastCol . '1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:' . $lastCol . '1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFCCCCCC');
+        
+        // Isi data
+        $row = 2;
+        foreach ($data as $item) {
+            $sheet->setCellValue('A' . $row, $item['model_no']);
+            $sheet->setCellValue('B' . $row, $item['class']);
+            
+            // Isi data schedule
+            $col = 'C';
+            for ($i = 1; $i <= 31; $i++) {
+                $sheet->setCellValue($col . $row, $item["schedule_{$i}"] ?? 0);
+                $col++;
+            }
+            
+            // Isi total
+            $sheet->setCellValue('AH' . $row, $item['total']);
+            
+            $row++;
+        }
+        
+        // Auto size kolom - menggunakan metode manual untuk mendukung kolom multi-karakter (AA, AB, dll)
+        $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
+                  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 
+                  'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH'];
+        
+        foreach ($columns as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        
+        // Set header untuk download
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="Sales_Planning_Export_' . date('Y-m-d') . '.xlsx"');
+        header('Cache-Control: max-age=0');
+        
+        // Tulis ke output dan keluar
+        $writer = new WriterXlsx($spreadsheet);
+        $writer->save('php://output');
+        exit();
     }
     //     $salesModel = new SalesModel();
 

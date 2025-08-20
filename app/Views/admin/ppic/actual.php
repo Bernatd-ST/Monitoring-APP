@@ -165,7 +165,7 @@
 
 <!-- Modal Tambah/Edit Data Actual Production -->
 <div class="modal fade" id="actualModal" tabindex="-1" aria-labelledby="actualModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="actualModalLabel">Tambah Data Actual Production</h5>

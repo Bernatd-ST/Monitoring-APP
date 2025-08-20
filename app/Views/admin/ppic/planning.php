@@ -752,7 +752,7 @@
 
 <!-- Modal Form Tambah/Edit Data Planning -->
 <div class="modal fade" id="planningFormModal" tabindex="-1" aria-labelledby="planningFormModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-gradient-primary text-white">
                 <h5 class="modal-title" id="planningFormModalLabel">Tambah Data Planning</h5>
@@ -792,69 +792,106 @@
                         </div>
                     </div>
                     
-                    <!-- Nav tabs untuk daily input -->
-                    <ul class="nav nav-tabs" id="planningTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="days-1-7-tab" data-bs-toggle="tab" data-bs-target="#days-1-7" type="button" role="tab" aria-controls="days-1-7" aria-selected="true">Hari 1-7</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="days-8-14-tab" data-bs-toggle="tab" data-bs-target="#days-8-14" type="button" role="tab" aria-controls="days-8-14" aria-selected="false">Hari 8-14</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="days-15-21-tab" data-bs-toggle="tab" data-bs-target="#days-15-21" type="button" role="tab" aria-controls="days-15-21" aria-selected="false">Hari 15-21</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="days-22-31-tab" data-bs-toggle="tab" data-bs-target="#days-22-31" type="button" role="tab" aria-controls="days-22-31" aria-selected="false">Hari 22-31</button>
-                        </li>
-                    </ul>
-                    
-                    <!-- Tab panes -->
-                    <div class="tab-content mt-3">
-                        <!-- Hari 1-7 -->
-                        <div class="tab-pane fade show active" id="days-1-7" role="tabpanel" aria-labelledby="days-1-7-tab">
-                            <div class="day-inputs">
-                                <?php for ($i = 1; $i <= 7; $i++): ?>
-                                <div class="form-group">
-                                    <label for="day-<?= $i ?>" class="form-label">Hari <?= $i ?></label>
-                                    <input type="number" step="0.1" min="0" class="form-control day-input" id="day-<?= $i ?>" name="day_<?= $i ?>" value="0">
-                                </div>
-                                <?php endfor; ?>
-                            </div>
+                    <!-- Schedule Data Harian dengan layout 6 tanggal per baris -->
+                    <div class="card shadow-sm mb-3 mt-3">
+                        <div class="card-header bg-light">
+                            <h6 class="fw-bold mb-0">Schedule Data Harian</h6>
                         </div>
-                        
-                        <!-- Hari 8-14 -->
-                        <div class="tab-pane fade" id="days-8-14" role="tabpanel" aria-labelledby="days-8-14-tab">
-                            <div class="day-inputs">
-                                <?php for ($i = 8; $i <= 14; $i++): ?>
-                                <div class="form-group">
-                                    <label for="day-<?= $i ?>" class="form-label">Hari <?= $i ?></label>
-                                    <input type="number" step="0.1" min="0" class="form-control day-input" id="day-<?= $i ?>" name="day_<?= $i ?>" value="0">
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <!-- Baris 1: Tanggal 1-6 -->
+                                <div class="col-12 mb-2">
+                                    <div class="row g-1">
+                                        <?php for ($i = 1; $i <= 6; $i++): ?>
+                                            <div class="col-md-2">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text"><?= $i ?></span>
+                                                    <input type="number" step="0.1" min="0" class="form-control day-input" 
+                                                        id="day-<?= $i ?>" name="day_<?= $i ?>" 
+                                                        value="0">
+                                                </div>
+                                            </div>
+                                        <?php endfor; ?>
+                                    </div>
                                 </div>
-                                <?php endfor; ?>
-                            </div>
-                        </div>
-                        
-                        <!-- Hari 15-21 -->
-                        <div class="tab-pane fade" id="days-15-21" role="tabpanel" aria-labelledby="days-15-21-tab">
-                            <div class="day-inputs">
-                                <?php for ($i = 15; $i <= 21; $i++): ?>
-                                <div class="form-group">
-                                    <label for="day-<?= $i ?>" class="form-label">Hari <?= $i ?></label>
-                                    <input type="number" step="0.1" min="0" class="form-control day-input" id="day-<?= $i ?>" name="day_<?= $i ?>" value="0">
+                                
+                                <!-- Baris 2: Tanggal 7-12 -->
+                                <div class="col-12 mb-2">
+                                    <div class="row g-1">
+                                        <?php for ($i = 7; $i <= 12; $i++): ?>
+                                            <div class="col-md-2">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text"><?= $i ?></span>
+                                                    <input type="number" step="0.1" min="0" class="form-control day-input" 
+                                                        id="day-<?= $i ?>" name="day_<?= $i ?>" 
+                                                        value="0">
+                                                </div>
+                                            </div>
+                                        <?php endfor; ?>
+                                    </div>
                                 </div>
-                                <?php endfor; ?>
-                            </div>
-                        </div>
-                        
-                        <!-- Hari 22-31 -->
-                        <div class="tab-pane fade" id="days-22-31" role="tabpanel" aria-labelledby="days-22-31-tab">
-                            <div class="day-inputs">
-                                <?php for ($i = 22; $i <= 31; $i++): ?>
-                                <div class="form-group">
-                                    <label for="day-<?= $i ?>" class="form-label">Hari <?= $i ?></label>
-                                    <input type="number" step="0.1" min="0" class="form-control day-input" id="day-<?= $i ?>" name="day_<?= $i ?>" value="0">
+                                
+                                <!-- Baris 3: Tanggal 13-18 -->
+                                <div class="col-12 mb-2">
+                                    <div class="row g-1">
+                                        <?php for ($i = 13; $i <= 18; $i++): ?>
+                                            <div class="col-md-2">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text"><?= $i ?></span>
+                                                    <input type="number" step="0.1" min="0" class="form-control day-input" 
+                                                        id="day-<?= $i ?>" name="day_<?= $i ?>" 
+                                                        value="0">
+                                                </div>
+                                            </div>
+                                        <?php endfor; ?>
+                                    </div>
                                 </div>
-                                <?php endfor; ?>
+                                
+                                <!-- Baris 4: Tanggal 19-24 -->
+                                <div class="col-12 mb-2">
+                                    <div class="row g-1">
+                                        <?php for ($i = 19; $i <= 24; $i++): ?>
+                                            <div class="col-md-2">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text"><?= $i ?></span>
+                                                    <input type="number" step="0.1" min="0" class="form-control day-input" 
+                                                        id="day-<?= $i ?>" name="day_<?= $i ?>" 
+                                                        value="0">
+                                                </div>
+                                            </div>
+                                        <?php endfor; ?>
+                                    </div>
+                                </div>
+                                
+                                <!-- Baris 5: Tanggal 25-30 -->
+                                <div class="col-12 mb-2">
+                                    <div class="row g-1">
+                                        <?php for ($i = 25; $i <= 30; $i++): ?>
+                                            <div class="col-md-2">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text"><?= $i ?></span>
+                                                    <input type="number" step="0.1" min="0" class="form-control day-input" 
+                                                        id="day-<?= $i ?>" name="day_<?= $i ?>" 
+                                                        value="0">
+                                                </div>
+                                            </div>
+                                        <?php endfor; ?>
+                                    </div>
+                                </div>
+                                
+                                <!-- Baris 6: Tanggal 31 -->
+                                <div class="col-12">
+                                    <div class="row g-1">
+                                        <div class="col-md-2">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text">31</span>
+                                                <input type="number" step="0.1" min="0" class="form-control day-input" 
+                                                    id="day-31" name="day_31" 
+                                                    value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

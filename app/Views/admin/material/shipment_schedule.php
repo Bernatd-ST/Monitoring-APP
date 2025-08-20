@@ -147,12 +147,12 @@
 
 <?= $this->section('page_buttons') ?>
     <div class="btn-toolbar mb-2 mb-md-0">
-        <button type="button" class="btn btn-sm btn-outline-success mr-2" data-bs-toggle="modal" data-bs-target="#importModal">
+        <button type="button" class="btn btn-sm btn-outline-primary mr-2" data-bs-toggle="modal" data-bs-target="#importModal">
             <i class="fas fa-file-import"></i>
             Import Excel
         </button>
-        <a href="<?= base_url('admin/material/export-shipment-schedule') ?>" class="btn btn-sm btn-outline-info mr-2">
-            <i class="fas fa-download"></i>
+        <a href="<?= base_url('admin/material/export-shipment-schedule') ?>" class="btn btn-sm btn-outline-success mr-2">
+            <i class="fas fa-file-download"></i>
             Export Excel
         </a>
     </div>
@@ -182,7 +182,7 @@
             <h5 class="m-0 font-weight-bold">Shipment Schedule</h5>
             <div>
                 <button type="button" class="btn btn-sm btn-light mr-2" data-bs-toggle="modal" data-bs-target="#addModal">
-                    <i class="fas fa-plus"></i> Add
+                    <i class="fas fa-plus"></i> Tambah Shipment
                 </button>
                 <button id="toggleFilter" class="btn btn-sm btn-light">
                     <i class="fas fa-filter"></i> Filter

@@ -32,6 +32,11 @@ $routes->group('admin/dashboard-analytics', ['filter' => 'auth'], function ($rou
 // Sales planing routes
 $routes->get('admin/sales/sales', 'SalesController::index', ['filter' => 'auth']);
 $routes->post('admin/sales/upload', 'SalesController::upload', ['filter' => 'auth']);
+$routes->post('admin/sales/add', 'SalesController::add', ['filter' => 'auth']);
+$routes->get('admin/sales/get/(:num)', 'SalesController::get/$1', ['filter' => 'auth']);
+$routes->post('admin/sales/update', 'SalesController::update', ['filter' => 'auth']);
+$routes->get('admin/sales/delete/(:num)', 'SalesController::delete/$1', ['filter' => 'auth']);
+$routes->get('admin/sales/export', 'SalesController::export', ['filter' => 'auth']);
 
 // Sales actual routes
 $routes->get('admin/sales/actual', 'SalesActualController::index', ['filter' => 'auth']);

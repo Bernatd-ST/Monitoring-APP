@@ -2,107 +2,205 @@ body, html {
     height: 100%;
     margin: 0;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    background-color: #f4f7f6;
+    background: linear-gradient(135deg, #f0ffff, #ecf4f5, #d0f0f1);
+    overflow-x: hidden;
 }
 
 .main-container {
     display: flex;
-    height: 100%;
+    height: 100vh;
     width: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-container {
+    display: flex;
+    width: 80%;
+    max-width: 1000px;
+    height: 600px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    background-color: #fff;
 }
 
 .branding-side {
     flex: 1;
-    background: linear-gradient(135deg, #007bff, #0056b3);
-    color: white;
+    background-image: url('/image/auth.jpg');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.branding-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(110, 191, 215, 0.85), rgba(185, 232, 238, 0.716));
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
     padding: 40px;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-.branding-side h1 {
+.branding-overlay h1 {
     font-weight: 700;
-    font-size: 3rem;
+    font-size: 2.5rem;
     margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-.branding-side p {
+.branding-overlay p {
     font-size: 1.2rem;
     max-width: 80%;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
 .form-side {
     flex: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 40px;
     background-color: #ffffff;
 }
 
+.logo-container {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.logo-container img {
+    height: 60px;
+    margin-bottom: 0.5rem;
+}
+
+.app-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2da0a8;
+    margin: 0;
+}
+
 .login-card {
     width: 100%;
-    max-width: 420px;
-    padding: 2.5rem;
+    max-width: 380px;
+    padding: 2rem;
     border: none;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    background-color: white;
 }
 
 .login-card h2 {
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: #333;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: #2da0a8;
+    font-size: 1.75rem;
 }
 
 .login-card .form-text {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+    color: #6c757d;
 }
 
 .form-control {
-    height: 50px;
-    border-radius: 8px;
-    border: 1px solid #ced4da;
+    height: 48px;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    padding-left: 15px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
 }
 
 .form-control:focus {
-    border-color: #86b7fe;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    border-color: #2682a6;
+    box-shadow: 0 0 0 0.25rem rgba(156, 39, 176, 0.15);
 }
 
 .input-group-text {
-    border-radius: 8px 0 0 8px;
-    background-color: #e9ecef;
-    border: 1px solid #ced4da;
+    border-radius: 10px 0 0 10px;
+    background-color: #f8f5ff;
+    border: 1px solid #e0e0e0;
+    border-right: none;
+    color: #2682a6;
+    width: 50px;
+    display: flex;
+    justify-content: center;
 }
 
 .btn-primary {
-    height: 50px;
-    border-radius: 8px;
+    height: 48px;
+    border-radius: 10px;
     font-weight: 600;
     border: none;
-    background-color: #007bff;
+    background: linear-gradient(135deg, #2682a6, #673ab7);
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(156, 39, 176, 0.2);
 }
 
 .btn-primary:hover {
-    background-color: #0056b3;
+    background: linear-gradient(135deg, #8e24aa, #5e35b1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(156, 39, 176, 0.25);
 }
 
 .footer-links {
     text-align: center;
     margin-top: 1.5rem;
+    color: #6c757d;
+    font-size: 0.95rem;
 }
 
 .footer-links a {
+    color: #2682a6;
     text-decoration: none;
-    color: #007bff;
-    font-weight: 500;
+    font-weight: 600;
+    transition: all 0.2s ease;
 }
 
 .footer-links a:hover {
+    color: #7b1fa2;
     text-decoration: underline;
+}
+
+.form-label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #424242;
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 992px) {
+    .auth-container {
+        width: 90%;
+        height: auto;
+        flex-direction: column;
+    }
+    
+    .branding-side {
+        display: none;
+    }
+    
+    .form-side {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .auth-container {
+        width: 95%;
+        box-shadow: none;
+        border-radius: 0;
+    }
+    
+    .login-card {
+        padding: 1.5rem;
+    }
 }

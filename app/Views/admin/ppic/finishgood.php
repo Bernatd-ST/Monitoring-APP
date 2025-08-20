@@ -6,9 +6,6 @@
         <button type="button" class="btn btn-sm btn-outline-primary" id="uploadExcelBtn">
             <i class="fas fa-file-excel"></i> Import Excel
         </button>
-        <a href="<?= base_url('admin/ppic') ?>" class="btn btn-sm btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> Kembali
-        </a>
     </div>
 </div>
 <?= $this->endSection() ?>

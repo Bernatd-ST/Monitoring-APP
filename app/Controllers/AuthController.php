@@ -32,12 +32,9 @@ class AuthController extends BaseController
                     'logged_in'   => TRUE
                 ];
                 $session->set($ses_data);
-                // redirect based on role
-                if ($user->role == 'admin') {
-                    return redirect()->to('/admin/dashboard');
-                } else {
-                    return redirect()->to('/user/dashboard');
-                }
+                // Redirect all users to admin dashboard
+                // Both admin and regular users now go to the same dashboard
+                return redirect()->to('/admin/dashboard');
             } else {
                 $session->setFlashdata('msg', 'Wrong Password');
                 return redirect()->to('/login');

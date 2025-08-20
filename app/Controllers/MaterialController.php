@@ -645,7 +645,16 @@ class MaterialController extends BaseController
     public function addMaterial()
     {
         $data = [
-            'title' => 'Add Material Control'
+            'title' => 'Add Material Control',
+            'material' => [
+                'id' => '',
+                'ckd' => '',
+                'period' => '',
+                'description' => '',
+                'part_no' => '',
+                'class' => '',
+                'beginning' => ''
+            ]
         ];
         
         return view('admin/material/material_form', $data);
@@ -683,6 +692,17 @@ class MaterialController extends BaseController
         if (empty($data['ckd']) || empty($data['part_no'])) {
             $errorMsg = 'CKD and Part No are required fields';
             log_message('error', 'Material save failed: ' . $errorMsg);
+            
+            // Jika request AJAX, return JSON
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'success' => false,
+                    'message' => $errorMsg
+                ]);
+            }
+            
+            // Jika bukan AJAX, redirect dengan error
             return redirect()->back()->withInput()
                 ->with('error', $errorMsg);
         }
@@ -691,17 +711,50 @@ class MaterialController extends BaseController
             // Simpan data ke database
             if ($this->stockMaterialModel->insert($data)) {
                 log_message('info', 'Material saved successfully: ' . json_encode($data));
+                
+                // Jika request AJAX, return JSON
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'status' => 'success',
+                        'success' => true,
+                        'message' => 'Material data saved successfully'
+                    ]);
+                }
+                
+                // Jika bukan AJAX, redirect dengan success message
                 return redirect()->to('/admin/material/material-control')
                     ->with('success', 'Material data saved successfully');
             } else {
                 $errors = $this->stockMaterialModel->errors();
                 $errorMsg = implode(', ', $errors);
                 log_message('error', 'Material save failed: ' . $errorMsg);
+                
+                // Jika request AJAX, return JSON
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'status' => 'error',
+                        'success' => false,
+                        'message' => 'Failed to save material data: ' . $errorMsg
+                    ]);
+                }
+                
+                // Jika bukan AJAX, redirect dengan error
                 return redirect()->back()->withInput()
                     ->with('error', 'Failed to save material data: ' . $errorMsg);
             }
         } catch (\Exception $e) {
             log_message('error', 'Exception during Material save: ' . $e->getMessage());
+            
+            // Jika request AJAX, return JSON
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'success' => false,
+                    'message' => 'An error occurred while saving material data: ' . $e->getMessage()
+                ]);
+            }
+            
+            // Jika bukan AJAX, redirect dengan error
             return redirect()->back()->withInput()
                 ->with('error', 'An error occurred while saving material data: ' . $e->getMessage());
         }
