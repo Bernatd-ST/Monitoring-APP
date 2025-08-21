@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Monitoring App</title>
-    <link href="<?= base_url('assets/vendor/bootstrap/bootstrap-5.3.3-dist/css/bootstrap.min.css') ?>" rel="stylesheet">
-    <link rel="stylesheet" href="<?= base_url('assets/vendor/fontawesome/css/all.min.css') ?>">
+    <link href="<?= base_url('assets/bundling/bootstrap/bootstrap-5.3.3-dist/css/bootstrap.min.css') ?>" rel="stylesheet">
+    <link rel="stylesheet" href="<?= base_url('assets/bundling/fontawesome/css/all.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/auth.css') ?>">
     <link rel="shortcut icon" type="image/png" href="<?= base_url('image/icon.ico') ?>">
 </head>

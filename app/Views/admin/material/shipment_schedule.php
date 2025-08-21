@@ -2,10 +2,10 @@
 
 <?= $this->section('styles') ?>
 <!-- Custom styles for this page -->
-<link href="<?= base_url('vendor/datatables/dataTables.bootstrap4.min.css') ?>" rel="stylesheet">
-<link href="<?= base_url('assets/vendor/select2/select2.min.css') ?>" rel="stylesheet" />
-<link href="<?= base_url('assets/vendor/select2/select2-bootstrap-5-theme.min.css') ?>" rel="stylesheet" />
-<link href="<?= base_url('assets/vendor/toastr/toastr.min.css') ?>" rel="stylesheet">
+<link href="<?= base_url('bundling/datatables/dataTables.bootstrap4.min.css') ?>" rel="stylesheet">
+<link href="<?= base_url('bundling/select2/select2.min.css') ?>" rel="stylesheet" />
+<link href="<?= base_url('bundling/select2/select2-bootstrap-5-theme.min.css') ?>" rel="stylesheet" />
+<link href="<?= base_url('bundling/toastr/toastr.min.css') ?>" rel="stylesheet">
 <style>
     /* Styling untuk tabel dengan scroll horizontal */
     .dataTables_wrapper {
@@ -545,10 +545,10 @@
 
 <?= $this->section('scripts') ?>
 <!-- Page level plugins -->
-<script src="<?= base_url('assets/vendor/datatables/jquery.dataTables.min.js') ?>"></script>
-<script src="<?= base_url('assets/vendor/datatables/dataTables.bootstrap5.min.js') ?>"></script>
-<script src="<?= base_url('assets/vendor/select2/select2.min.js') ?>"></script>
-<script src="<?= base_url('assets/vendor/toastr/toastr.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/datatables/jquery.dataTables.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/datatables/dataTables.bootstrap5.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/select2/select2.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/toastr/toastr.min.js') ?>"></script>
 
 <script>
 $(document).ready(function() {
@@ -726,10 +726,10 @@ $(document).ready(function() {
 
 <?= $this->section('scripts') ?>
 <!-- Page level plugins -->
-<script src="<?= base_url('assets/vendor/datatables/jquery.dataTables.min.js') ?>"></script>
-<script src="<?= base_url('assets/vendor/datatables/dataTables.bootstrap5.min.js') ?>"></script>
-<script src="<?= base_url('assets/vendor/select2/select2.min.js') ?>"></script>
-<script src="<?= base_url('assets/vendor/toastr/toastr.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/datatables/jquery.dataTables.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/datatables/dataTables.bootstrap5.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/select2/select2.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/toastr/toastr.min.js') ?>"></script>
 
 <script>
 $(document).ready(function() {

@@ -2,13 +2,13 @@
 
 <?= $this->section('styles') ?>
 <!-- Select2 CSS -->
-<link href="<?= base_url('assets/vendor/select2/select2.min.css') ?>" rel="stylesheet" />
-<link href="<?= base_url('assets/vendor/select2/select2-bootstrap-5-theme.min.css') ?>" rel="stylesheet" />
+<link href="<?= base_url('assets/bundling/select2/select2.min.css') ?>" rel="stylesheet" />
+<link href="<?= base_url('assets/bundling/select2/select2-bootstrap-5-theme.min.css') ?>" rel="stylesheet" />
 <!-- DateRangePicker CSS -->
-<link href="<?= base_url('assets/vendor/daterangepicker/daterangepicker.css') ?>" rel="stylesheet" />
+<link href="<?= base_url('assets/bundling/daterangepicker/daterangepicker.css') ?>" rel="stylesheet" />
 <!-- DataTables CSS -->
-<link href="<?= base_url('assets/vendor/datatables/dataTables.bootstrap5.min.css') ?>" rel="stylesheet">
-<link href="<?= base_url('assets/vendor/datatables/fixedHeader.bootstrap5.min.css') ?>" rel="stylesheet">
+<link href="<?= base_url('assets/bundling/datatables/dataTables.bootstrap5.min.css') ?>" rel="stylesheet">
+<link href="<?= base_url('assets/bundling/datatables/fixedHeader.bootstrap5.min.css') ?>" rel="stylesheet">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -515,15 +515,15 @@
 
 <?= $this->section('scripts') ?>
 <!-- Moment.js -->
-<script src="<?= base_url('assets/vendor/momentjs/moment.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/momentjs/moment.min.js') ?>"></script>
 <!-- Date Range Picker -->
-<script src="<?= base_url('assets/vendor/daterangepicker/daterangepicker.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/daterangepicker/daterangepicker.min.js') ?>"></script>
 <!-- Select2 -->
-<script src="<?= base_url('assets/vendor/select2/select2.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/select2/select2.min.js') ?>"></script>
 <!-- DataTables JS -->
-<script src="<?= base_url('assets/vendor/datatables/jquery.dataTables.min.js') ?>"></script>
-<script src="<?= base_url('assets/vendor/datatables/dataTables.bootstrap5.min.js') ?>"></script>
-<script src="<?= base_url('assets/vendor/datatables/dataTables.fixedHeader.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/datatables/jquery.dataTables.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/datatables/dataTables.bootstrap5.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/datatables/dataTables.fixedHeader.min.js') ?>"></script>
 <script>
 // Helper function to format numbers
 function formatNumber(value) {

@@ -412,7 +412,7 @@
 </div>
 
 <!-- Chart.js Library (Local) -->
-<script src="<?= base_url('assets/vendor/chartjs/chart.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/chartjs/chart.min.js') ?>"></script>
 
 <!-- Custom scripts for this page -->
 <script>

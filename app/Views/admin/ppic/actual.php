@@ -472,6 +472,6 @@
 
 <?= $this->section('scripts') ?>
 <!-- Chart.js -->
-<script src="<?= base_url('assets/vendor/chartjs/chart.min.js') ?>"></script>
+<script src="<?= base_url('assets/bundling/chartjs/chart.min.js') ?>"></script>
 <script src="<?= base_url('js/ppic/actual.js') ?>"></script>
 <?= $this->endSection() ?>

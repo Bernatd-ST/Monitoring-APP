@@ -2,7 +2,7 @@
 
 <?= $this->section('styles') ?>
 <!-- Custom styles for this page -->
-<link href="<?= base_url('vendor/datatables/dataTables.bootstrap4.min.css') ?>" rel="stylesheet">
+<link href="<?= base_url('bundling/datatables/dataTables.bootstrap4.min.css') ?>" rel="stylesheet">
 <style>
     /* Styling untuk tabel dengan scroll horizontal */
     .dataTables_wrapper {
