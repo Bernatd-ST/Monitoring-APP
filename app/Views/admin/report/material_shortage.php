@@ -2,13 +2,13 @@
 
 <?= $this->section('styles') ?>
 <!-- Select2 CSS -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+<link href="<?= base_url('assets/vendor/select2/select2.min.css') ?>" rel="stylesheet" />
+<link href="<?= base_url('assets/vendor/select2/select2-bootstrap-5-theme.min.css') ?>" rel="stylesheet" />
 <!-- DateRangePicker CSS -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.0.5/daterangepicker.css" rel="stylesheet" />
+<link href="<?= base_url('assets/vendor/daterangepicker/daterangepicker.css') ?>" rel="stylesheet" />
 <!-- DataTables CSS -->
-<link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-<link href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.bootstrap5.min.css" rel="stylesheet">
+<link href="<?= base_url('assets/vendor/datatables/dataTables.bootstrap5.min.css') ?>" rel="stylesheet">
+<link href="<?= base_url('assets/vendor/datatables/fixedHeader.bootstrap5.min.css') ?>" rel="stylesheet">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -118,8 +118,8 @@
 <link rel="stylesheet" href="<?= base_url('plugins/select2/css/select2.min.css') ?>">
 <link rel="stylesheet" href="<?= base_url('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') ?>">
 <!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.bootstrap5.min.css">
+<link rel="stylesheet" href="<?= base_url('plugins/datatables/dataTables.bootstrap5.min.css') ?>">
+<link rel="stylesheet" href="<?= base_url('plugins/datatables/fixedHeader.bootstrap5.min.css') ?>">
 <style>
     /* Global styling reset for this page */
     .table {
@@ -515,15 +515,15 @@
 
 <?= $this->section('scripts') ?>
 <!-- Moment.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script src="<?= base_url('assets/vendor/momentjs/moment.min.js') ?>"></script>
 <!-- Date Range Picker -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.0.5/daterangepicker.min.js"></script>
+<script src="<?= base_url('assets/vendor/daterangepicker/daterangepicker.min.js') ?>"></script>
 <!-- Select2 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+<script src="<?= base_url('assets/vendor/select2/select2.min.js') ?>"></script>
 <!-- DataTables JS -->
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
+<script src="<?= base_url('assets/vendor/datatables/jquery.dataTables.min.js') ?>"></script>
+<script src="<?= base_url('assets/vendor/datatables/dataTables.bootstrap5.min.js') ?>"></script>
+<script src="<?= base_url('assets/vendor/datatables/dataTables.fixedHeader.min.js') ?>"></script>
 <script>
 // Helper function to format numbers
 function formatNumber(value) {

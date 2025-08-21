@@ -426,7 +426,7 @@
                 responsive: true,
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json',
+                    url: '<?= base_url('plugins/datatables/i18n/id.json') ?>',
                 },
                 columnDefs: [
                     { className: "text-nowrap", targets: [0, 1, 4, 5, 6] },

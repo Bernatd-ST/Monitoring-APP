@@ -411,8 +411,8 @@
   </div>
 </div>
 
-<!-- Chart.js Library -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart.js Library (Local) -->
+<script src="<?= base_url('assets/vendor/chartjs/chart.min.js') ?>"></script>
 
 <!-- Custom scripts for this page -->
 <script>

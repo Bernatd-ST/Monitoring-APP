@@ -46,7 +46,7 @@ $(document).ready(function() {
         pageLength: 10,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
         language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json'
+            url: '/plugins/datatables/i18n/id.json'
         },
         columnDefs: [
             {

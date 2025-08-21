@@ -5,20 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= csrf_hash() ?>">
     <title><?= esc($title); ?> - Monitoring App</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Google Fonts - Nunito -->
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="<?= base_url('assets/vendor/bootstrap/bootstrap-5.3.3-dist/css/bootstrap.min.css') ?>" rel="stylesheet">
+    <link rel="stylesheet" href="<?= base_url('assets/vendor/fontawesome/css/all.min.css') ?>">
+    <!-- Google Fonts - Nunito (Local) -->
+    <link href="<?= base_url('assets/fonts/nunito.css') ?>" rel="stylesheet">
     <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+    <link rel="stylesheet" href="<?= base_url('assets/vendor/datatables/dataTables.bootstrap5.min.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/vendor/datatables/responsive.bootstrap5.min.css') ?>">
     <!-- Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link href="<?= base_url('assets/vendor/select2/select2.min.css') ?>" rel="stylesheet" />
+    <link href="<?= base_url('assets/vendor/select2/select2-bootstrap-5-theme.min.css') ?>" rel="stylesheet" />
     <!-- DateRangePicker CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <link rel="stylesheet" type="text/css" href="<?= base_url('assets/vendor/daterangepicker/daterangepicker.min.css') ?>" />
     <!-- Toastr CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="<?= base_url('assets/vendor/toastr/toastr.min.css') ?>">
     <link rel="stylesheet" href="/css/Dashboard/dashboard.css">
     <link rel="stylesheet" href="/css/ppic/style.css">
     <link rel="stylesheet" href="/css/sidebar-custom.css">
@@ -195,28 +195,28 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="<?= base_url('assets/vendor/bootstrap/bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js') ?>"></script>
+<script src="<?= base_url('assets/vendor/jquery/jquery.min.js') ?>"></script>
 <!-- Definisi base_url untuk JavaScript -->
 <script>
     var base_url = '<?= base_url() ?>';
     console.log('Base URL:', base_url);
 </script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+<script src="<?= base_url('assets/vendor/datatables/jquery.dataTables.min.js') ?>"></script>
+<script src="<?= base_url('assets/vendor/datatables/dataTables.bootstrap5.min.js') ?>"></script>
+<script src="<?= base_url('assets/vendor/datatables/dataTables.responsive.min.js') ?>"></script>
+<script src="<?= base_url('assets/vendor/datatables/responsive.bootstrap5.min.js') ?>"></script>
 <!-- Select2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="<?= base_url('assets/vendor/select2/select2.min.js') ?>"></script>
 <!-- DataTables FixedColumns -->
-<script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
+<script src="<?= base_url('assets/vendor/datatables/dataTables.fixedColumns.min.js') ?>"></script>
 <!-- Moment.js & DateRangePicker -->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script type="text/javascript" src="<?= base_url('assets/vendor/momentjs/moment.min.js') ?>"></script>
+<script type="text/javascript" src="<?= base_url('assets/vendor/daterangepicker/daterangepicker.min.js') ?>"></script>
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="<?= base_url('assets/vendor/chartjs/chart.min.js') ?>"></script>
 <!-- Toastr JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<script src="<?= base_url('assets/vendor/toastr/toastr.min.js') ?>"></script>
 
 <!-- Toastr Notifications -->
 <script>

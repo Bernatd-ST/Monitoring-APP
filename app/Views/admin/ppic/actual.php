@@ -472,6 +472,6 @@
 
 <?= $this->section('scripts') ?>
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="<?= base_url('assets/vendor/chartjs/chart.min.js') ?>"></script>
 <script src="<?= base_url('js/ppic/actual.js') ?>"></script>
 <?= $this->endSection() ?>
