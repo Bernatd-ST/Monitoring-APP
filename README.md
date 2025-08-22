@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="public/image/logo.png" alt="Stock Supplier Monitoring System Logo" width="200"/>
   <h1>Stock Supplier Monitoring System</h1>
   <p>Sistem Monitoring Stok, Produksi, dan Material berbasis Web</p>
   <p>
