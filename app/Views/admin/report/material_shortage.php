@@ -558,9 +558,9 @@ $(function() {
         $icon.removeClass('fa-filter').addClass('fa-times');
     }
 
-    // Inisialisasi Date Range Picker dengan default 30 hari
-    var start = moment();
-    var end = moment().add(29, 'days');
+    // Inisialisasi Date Range Picker dengan default tanggal 1 bulan berjalan sampai hari ini
+    var start = moment().startOf('month'); // tanggal 1 bulan berjalan
+    var end = moment(); // hari ini
 
     function cb(start, end) {
         $('#date-range').val(start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
@@ -640,8 +640,8 @@ $(function() {
     });
 
     // Load data saat halaman pertama kali dibuka
-    // Tidak load data otomatis, tunggu user klik search
-    // loadMaterialShortageData();
+    // Auto load data saat halaman pertama kali diakses
+    $('#search-btn').trigger('click');
 });
 
 function loadPartOptions() {
